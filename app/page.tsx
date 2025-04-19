@@ -131,23 +131,43 @@ export default function Home() {
         )}
 
         {formState.response && (
-          <div className="mt-8 space-y-8">
+          <div className="mt-8 space-y-12">
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-primary">Chain of Thought Process</h2>
-              <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-2xl font-bold text-primary">Chain of Thought Process</h2>
+                <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                  {formState.response.steps.length} Steps
+                </div>
+              </div>
+              <div className="space-y-8">
                 {formState.response.steps.map((step, index) => (
                   <StepBox key={index} step={step} index={index} />
                 ))}
               </div>
             </div>
             
-            <div className="border-t-2 border-primary/20 pt-8">
-              <h2 className="text-2xl font-bold mb-4 text-primary">Final Answer</h2>
-              <div className="bg-primary/5 p-6 border-2 border-primary rounded-lg shadow-lg">
-                <div className="font-mono text-sm bg-gray-900 text-white p-4 rounded-md overflow-x-auto mb-4">
-                  <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
+            <div className="relative">
+              {/* Connector from last step to final answer */}
+              <div className="absolute -top-8 left-5 w-0.5 h-8 bg-primary/30" />
+              
+              <div className="border-t-2 border-primary/20 pt-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-2xl font-bold text-primary">Final Answer</h2>
+                  <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                    Result
+                  </div>
                 </div>
-                <div className="whitespace-pre-wrap text-lg">{formState.response.finalAnswer}</div>
+                <div className="bg-primary/5 p-6 border-2 border-primary rounded-lg shadow-lg">
+                  <div className="relative">
+                    <div className="absolute top-2 right-2 text-xs text-gray-500">Final Answer JSON</div>
+                    <div className="font-mono text-sm bg-gray-900 text-white p-4 pt-8 rounded-md overflow-x-auto mb-4">
+                      <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-primary/20">
+                    <div className="whitespace-pre-wrap text-lg text-gray-800">{formState.response.finalAnswer}</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

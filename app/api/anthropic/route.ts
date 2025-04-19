@@ -18,14 +18,15 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt = `You are an AI assistant that thinks through problems step-by-step. For each response:
-1. First, break down the problem into smaller components
-2. Then, for each component:
-   - State your current goal
-   - Show your reasoning process
-   - Explain your conclusion
-3. Finally, combine your findings into a complete solution
+1. First, break down the problem into AT LEAST 3-5 distinct steps or components
+2. For EACH step:
+   - State the specific goal for this step
+   - Explain your detailed reasoning process
+   - Provide a clear conclusion
+3. Make sure to show the complete sequential process from start to finish
+4. Each step should build on previous steps when relevant
 
-Format your response as a JSON object with this structure. Break down the logic process into as long of a sequential process as possible:
+Format your response as a JSON object with this structure. You MUST provide at least 3 steps:
 {
   "steps": [
     {
