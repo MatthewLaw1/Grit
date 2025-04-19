@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-// Initialize Anthropic client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -9,7 +8,7 @@ const anthropic = new Anthropic({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt } = body;
+    const { prompt, model } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -19,8 +18,8 @@ export async function POST(request: NextRequest) {
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
+      model: model || process.env.ANTHROPIC_MODEL || 'claude-3-sonnet-20240229',
+      max_tokens: parseInt(process.env.MAX_TOKENS || '1000'),
       messages: [
         {
           role: 'user',
