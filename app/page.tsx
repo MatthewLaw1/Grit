@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import type { FormState } from './types';
+import type { FormState, ModelProvider, ModelConfig } from './types';
+import { MODEL_OPTIONS } from './types';
+import { StepBox } from './components/StepBox';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
@@ -9,6 +11,8 @@ export default function Home() {
     response: null,
     error: null,
     isLoading: false,
+    provider: 'anthropic',
+    model: 'claude-3-sonnet-20240229'
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -17,12 +21,15 @@ export default function Home() {
     setFormState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      const response = await fetch('/api/anthropic', {
+      const response = await fetch(`/api/${formState.provider}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: formState.prompt }),
+        body: JSON.stringify({ 
+          prompt: formState.prompt,
+          model: formState.model
+        }),
       });
 
       const data = await response.json();
@@ -45,12 +52,56 @@ export default function Home() {
     }
   };
 
+  const handleProviderChange = (provider: ModelProvider) => {
+    const defaultModel = MODEL_OPTIONS[provider][0].value;
+    setFormState(prev => ({
+      ...prev,
+      provider,
+      model: defaultModel
+    }));
+  };
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Anthropic API Integration</h1>
+        <h1 className="text-3xl font-bold mb-8">AI Model Integration</h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1">
+              <label htmlFor="provider" className="block text-sm font-medium mb-2">
+                Provider
+              </label>
+              <select
+                id="provider"
+                value={formState.provider}
+                onChange={(e) => handleProviderChange(e.target.value as ModelProvider)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="anthropic">Anthropic</option>
+                <option value="openai">OpenAI</option>
+              </select>
+            </div>
+            
+            <div className="flex-1">
+              <label htmlFor="model" className="block text-sm font-medium mb-2">
+                Model
+              </label>
+              <select
+                id="model"
+                value={formState.model}
+                onChange={(e) => setFormState(prev => ({ ...prev, model: e.target.value }))}
+                className="w-full p-2 border rounded-md"
+              >
+                {MODEL_OPTIONS[formState.provider].map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label htmlFor="prompt" className="block text-sm font-medium mb-2">
               Enter your prompt
@@ -80,10 +131,44 @@ export default function Home() {
         )}
 
         {formState.response && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-2">Response:</h2>
-            <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap">
-              {formState.response}
+          <div className="mt-8 space-y-12">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-2xl font-bold text-primary">Chain of Thought Process</h2>
+                <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                  {formState.response.steps.length} Steps
+                </div>
+              </div>
+              <div className="space-y-8">
+                {formState.response.steps.map((step, index) => (
+                  <StepBox key={index} step={step} index={index} />
+                ))}
+              </div>
+            </div>
+            
+            <div className="relative">
+              {/* Connector from last step to final answer */}
+              <div className="absolute -top-8 left-5 w-0.5 h-8 bg-primary/30" />
+              
+              <div className="border-t-2 border-primary/20 pt-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <h2 className="text-2xl font-bold text-primary">Final Answer</h2>
+                  <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                    Result
+                  </div>
+                </div>
+                <div className="bg-primary/5 p-6 border-2 border-primary rounded-lg shadow-lg">
+                  <div className="relative">
+                    <div className="absolute top-2 right-2 text-xs text-gray-500">Final Answer JSON</div>
+                    <div className="font-mono text-sm bg-gray-900 text-white p-4 pt-8 rounded-md overflow-x-auto mb-4">
+                      <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-primary/20">
+                    <div className="whitespace-pre-wrap text-lg text-gray-800">{formState.response.finalAnswer}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

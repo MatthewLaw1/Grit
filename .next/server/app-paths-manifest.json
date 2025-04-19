@@ -1,4 +1,7 @@
 {
+<<<<<<< HEAD
   "/api/anthropic/route": "app/api/anthropic/route.js",
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
   "/page": "app/page.js"
 }

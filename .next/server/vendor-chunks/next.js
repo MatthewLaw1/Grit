@@ -1765,6 +1765,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 
 /***/ }),
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/next/dist/api/server.js":
 /*!**********************************************!*\
   !*** ./node_modules/next/dist/api/server.js ***!
@@ -1776,6 +1777,8 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _ser
 
 /***/ }),
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ "(rsc)/./node_modules/next/dist/build/output/log.js":
 /*!****************************************************!*\
   !*** ./node_modules/next/dist/build/output/log.js ***!
@@ -1932,6 +1935,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 
 /***/ }),
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/next/dist/compiled/@edge-runtime/cookies/index.js":
 /*!************************************************************************!*\
   !*** ./node_modules/next/dist/compiled/@edge-runtime/cookies/index.js ***!
@@ -1943,6 +1947,8 @@ eval("\nvar __defProp = Object.defineProperty;\nvar __getOwnPropDesc = Object.ge
 
 /***/ }),
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ "(rsc)/./node_modules/next/dist/compiled/@opentelemetry/api/index.js":
 /*!*********************************************************************!*\
   !*** ./node_modules/next/dist/compiled/@opentelemetry/api/index.js ***!
@@ -1953,6 +1959,7 @@ eval("(()=>{\"use strict\";var e={491:(e,t,r)=>{Object.defineProperty(t,\"__esMo
 
 /***/ }),
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/next/dist/compiled/ua-parser-js/ua-parser.js":
 /*!*******************************************************************!*\
   !*** ./node_modules/next/dist/compiled/ua-parser-js/ua-parser.js ***!
@@ -1963,6 +1970,8 @@ eval("var __WEBPACK_AMD_DEFINE_RESULT__;(()=>{var i={226:function(i,e){(function
 
 /***/ }),
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ "(rsc)/./node_modules/next/dist/lib/constants.js":
 /*!*************************************************!*\
   !*** ./node_modules/next/dist/lib/constants.js ***!
@@ -2128,6 +2137,7 @@ eval("\nmodule.exports = __webpack_require__(/*! ../../module.compiled */ \"(ssr
 
 /***/ }),
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/next/dist/server/future/route-modules/app-route/module.compiled.js":
 /*!*****************************************************************************************!*\
   !*** ./node_modules/next/dist/server/future/route-modules/app-route/module.compiled.js ***!
@@ -2139,6 +2149,8 @@ eval("\nif (false) {} else {\n    if (false) {} else {\n        if (true) {\n   
 
 /***/ }),
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ "(rsc)/./node_modules/next/dist/server/lib/clone-response.js":
 /*!*************************************************************!*\
   !*** ./node_modules/next/dist/server/lib/clone-response.js ***!
@@ -2194,6 +2206,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 
 /***/ }),
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/next/dist/server/web/error.js":
 /*!****************************************************!*\
   !*** ./node_modules/next/dist/server/web/error.js ***!
@@ -2227,6 +2240,8 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 
 /***/ }),
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ "(rsc)/./node_modules/next/dist/server/web/spec-extension/adapters/reflect.js":
 /*!******************************************************************************!*\
   !*** ./node_modules/next/dist/server/web/spec-extension/adapters/reflect.js ***!
@@ -2236,6 +2251,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 "use strict";
 eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));\nObject.defineProperty(exports, \"ReflectAdapter\", ({\n    enumerable: true,\n    get: function() {\n        return ReflectAdapter;\n    }\n}));\nclass ReflectAdapter {\n    static get(target, prop, receiver) {\n        const value = Reflect.get(target, prop, receiver);\n        if (typeof value === \"function\") {\n            return value.bind(target);\n        }\n        return value;\n    }\n    static set(target, prop, value, receiver) {\n        return Reflect.set(target, prop, value, receiver);\n    }\n    static has(target, prop) {\n        return Reflect.has(target, prop);\n    }\n    static deleteProperty(target, prop) {\n        return Reflect.deleteProperty(target, prop);\n    }\n}\n\n//# sourceMappingURL=reflect.js.map//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9ub2RlX21vZHVsZXMvbmV4dC9kaXN0L3NlcnZlci93ZWIvc3BlYy1leHRlbnNpb24vYWRhcHRlcnMvcmVmbGVjdC5qcyIsIm1hcHBpbmdzIjoiQUFBYTtBQUNiLDhDQUE2QztBQUM3QztBQUNBLENBQUMsRUFBQztBQUNGLGtEQUFpRDtBQUNqRDtBQUNBO0FBQ0E7QUFDQTtBQUNBLENBQUMsRUFBQztBQUNGO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTs7QUFFQSIsInNvdXJjZXMiOlsid2VicGFjazovL25leHRqcy1hbnRocm9waWMvLi9ub2RlX21vZHVsZXMvbmV4dC9kaXN0L3NlcnZlci93ZWIvc3BlYy1leHRlbnNpb24vYWRhcHRlcnMvcmVmbGVjdC5qcz85NmI4Il0sInNvdXJjZXNDb250ZW50IjpbIlwidXNlIHN0cmljdFwiO1xuT2JqZWN0LmRlZmluZVByb3BlcnR5KGV4cG9ydHMsIFwiX19lc01vZHVsZVwiLCB7XG4gICAgdmFsdWU6IHRydWVcbn0pO1xuT2JqZWN0LmRlZmluZVByb3BlcnR5KGV4cG9ydHMsIFwiUmVmbGVjdEFkYXB0ZXJcIiwge1xuICAgIGVudW1lcmFibGU6IHRydWUsXG4gICAgZ2V0OiBmdW5jdGlvbigpIHtcbiAgICAgICAgcmV0dXJuIFJlZmxlY3RBZGFwdGVyO1xuICAgIH1cbn0pO1xuY2xhc3MgUmVmbGVjdEFkYXB0ZXIge1xuICAgIHN0YXRpYyBnZXQodGFyZ2V0LCBwcm9wLCByZWNlaXZlcikge1xuICAgICAgICBjb25zdCB2YWx1ZSA9IFJlZmxlY3QuZ2V0KHRhcmdldCwgcHJvcCwgcmVjZWl2ZXIpO1xuICAgICAgICBpZiAodHlwZW9mIHZhbHVlID09PSBcImZ1bmN0aW9uXCIpIHtcbiAgICAgICAgICAgIHJldHVybiB2YWx1ZS5iaW5kKHRhcmdldCk7XG4gICAgICAgIH1cbiAgICAgICAgcmV0dXJuIHZhbHVlO1xuICAgIH1cbiAgICBzdGF0aWMgc2V0KHRhcmdldCwgcHJvcCwgdmFsdWUsIHJlY2VpdmVyKSB7XG4gICAgICAgIHJldHVybiBSZWZsZWN0LnNldCh0YXJnZXQsIHByb3AsIHZhbHVlLCByZWNlaXZlcik7XG4gICAgfVxuICAgIHN0YXRpYyBoYXModGFyZ2V0LCBwcm9wKSB7XG4gICAgICAgIHJldHVybiBSZWZsZWN0Lmhhcyh0YXJnZXQsIHByb3ApO1xuICAgIH1cbiAgICBzdGF0aWMgZGVsZXRlUHJvcGVydHkodGFyZ2V0LCBwcm9wKSB7XG4gICAgICAgIHJldHVybiBSZWZsZWN0LmRlbGV0ZVByb3BlcnR5KHRhcmdldCwgcHJvcCk7XG4gICAgfVxufVxuXG4vLyMgc291cmNlTWFwcGluZ1VSTD1yZWZsZWN0LmpzLm1hcCJdLCJuYW1lcyI6W10sInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///(rsc)/./node_modules/next/dist/server/web/spec-extension/adapters/reflect.js\n");
 
+<<<<<<< HEAD
 /***/ }),
 
 /***/ "(rsc)/./node_modules/next/dist/server/web/spec-extension/cookies.js":
@@ -2445,6 +2461,8 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));
 "use strict";
 eval("/**\n * Removes the trailing slash for a given route or page path. Preserves the\n * root page. Examples:\n *   - `/foo/bar/` -> `/foo/bar`\n *   - `/foo/bar` -> `/foo/bar`\n *   - `/` -> `/`\n */ \nObject.defineProperty(exports, \"__esModule\", ({\n    value: true\n}));\nObject.defineProperty(exports, \"removeTrailingSlash\", ({\n    enumerable: true,\n    get: function() {\n        return removeTrailingSlash;\n    }\n}));\nfunction removeTrailingSlash(route) {\n    return route.replace(/\\/$/, \"\") || \"/\";\n} //# sourceMappingURL=remove-trailing-slash.js.map\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9ub2RlX21vZHVsZXMvbmV4dC9kaXN0L3NoYXJlZC9saWIvcm91dGVyL3V0aWxzL3JlbW92ZS10cmFpbGluZy1zbGFzaC5qcyIsIm1hcHBpbmdzIjoiQUFBQTs7Ozs7O0NBTUM7Ozs7dURBQ2VBOzs7ZUFBQUE7OztBQUFULFNBQVNBLG9CQUFvQkMsS0FBYTtJQUMvQyxPQUFPQSxNQUFNQyxPQUFPLENBQUMsT0FBTyxPQUFPO0FBQ3JDIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vbmV4dGpzLWFudGhyb3BpYy8uLi8uLi8uLi8uLi8uLi9zcmMvc2hhcmVkL2xpYi9yb3V0ZXIvdXRpbHMvcmVtb3ZlLXRyYWlsaW5nLXNsYXNoLnRzP2U5ODIiXSwibmFtZXMiOlsicmVtb3ZlVHJhaWxpbmdTbGFzaCIsInJvdXRlIiwicmVwbGFjZSJdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./node_modules/next/dist/shared/lib/router/utils/remove-trailing-slash.js\n");
 
+=======
+>>>>>>> ed1be112ee534d830d03c98c9e48428c9e719063
 /***/ })
 
 };

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-// Initialize Anthropic client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -9,7 +8,7 @@ const anthropic = new Anthropic({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt } = body;
+    const { prompt, model } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -18,19 +17,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const systemPrompt = `You are an AI assistant that thinks through problems step-by-step. For each response:
+1. First, break down the problem into AT LEAST 3-5 distinct steps or components
+2. For EACH step:
+   - State the specific goal for this step
+   - Explain your detailed reasoning process
+   - Provide a clear conclusion
+3. Make sure to show the complete sequential process from start to finish
+4. Each step should build on previous steps when relevant
+
+Format your response as a JSON object with this structure. You MUST provide at least 3 steps:
+{
+  "steps": [
+    {
+      "goal": "What I'm trying to achieve",
+      "reasoning": "My thought process",
+      "conclusion": "What I determined"
+    }
+  ],
+  "finalAnswer": "The complete solution"
+}`;
+
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
+      model: model || process.env.ANTHROPIC_MODEL || 'claude-3-sonnet-20240229',
+      max_tokens: parseInt(process.env.MAX_TOKENS || '1000'),
       messages: [
         {
           role: 'user',
-          content: prompt,
+          content: `${systemPrompt}\n\nUser request: ${prompt}`,
         },
       ],
     });
 
-    return NextResponse.json({ 
-      response: message.content[0].text
+    // Parse the response text as JSON
+    const responseText = message.content[0].text;
+    const parsedResponse = JSON.parse(responseText);
+    
+    return NextResponse.json({
+      response: parsedResponse
     });
     
   } catch (error) {
