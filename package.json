@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.14.1",
+    "lucide-react": "^0.501.0",
     "next": "^14.1.0",
     "openai": "^4.95.1",
     "react": "^18.2.0",
