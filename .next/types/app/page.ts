@@ -1,4 +1,4 @@
-// File: /Users/matthewlaw/Grit-AI_Reasoning_Framework/app/page.tsx
+// File: /Users/aacode/Desktop/Github /Hackathons/Grit-AI_Reasoning_Framework/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

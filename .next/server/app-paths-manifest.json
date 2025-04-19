@@ -1,4 +1,4 @@
 {
-  "/page": "app/page.js",
-  "/api/anthropic/route": "app/api/anthropic/route.js"
+  "/api/anthropic/route": "app/api/anthropic/route.js",
+  "/page": "app/page.js"
 }
