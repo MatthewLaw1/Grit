@@ -15,8 +15,19 @@ export const MODEL_OPTIONS = {
   ]
 };
 
+export interface ReasoningStep {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+}
+
+export interface ChainOfThoughtResponse {
+  steps: ReasoningStep[];
+  finalAnswer: string;
+}
+
 export interface AnthropicResponse {
-  response: string;
+  response: ChainOfThoughtResponse;
 }
 
 export interface AnthropicError {
@@ -25,7 +36,7 @@ export interface AnthropicError {
 
 export interface FormState {
   prompt: string;
-  response: string | null;
+  response: ChainOfThoughtResponse | null;
   error: string | null;
   isLoading: boolean;
   provider: ModelProvider;
