@@ -1,0 +1,4 @@
+{
+  "/page": "app/page.js",
+  "/api/anthropic/route": "app/api/anthropic/route.js"
+}
