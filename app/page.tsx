@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import type { FormState } from './types';
+import type { FormState, ModelProvider, ModelConfig } from './types';
+import { MODEL_OPTIONS } from './types';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
@@ -9,6 +10,8 @@ export default function Home() {
     response: null,
     error: null,
     isLoading: false,
+    provider: 'anthropic',
+    model: 'claude-3-sonnet-20240229'
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -17,12 +20,15 @@ export default function Home() {
     setFormState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      const response = await fetch('/api/anthropic', {
+      const response = await fetch(`/api/${formState.provider}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: formState.prompt }),
+        body: JSON.stringify({ 
+          prompt: formState.prompt,
+          model: formState.model
+        }),
       });
 
       const data = await response.json();
@@ -45,12 +51,56 @@ export default function Home() {
     }
   };
 
+  const handleProviderChange = (provider: ModelProvider) => {
+    const defaultModel = MODEL_OPTIONS[provider][0].value;
+    setFormState(prev => ({
+      ...prev,
+      provider,
+      model: defaultModel
+    }));
+  };
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Anthropic API Integration</h1>
+        <h1 className="text-3xl font-bold mb-8">AI Model Integration</h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1">
+              <label htmlFor="provider" className="block text-sm font-medium mb-2">
+                Provider
+              </label>
+              <select
+                id="provider"
+                value={formState.provider}
+                onChange={(e) => handleProviderChange(e.target.value as ModelProvider)}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="anthropic">Anthropic</option>
+                <option value="openai">OpenAI</option>
+              </select>
+            </div>
+            
+            <div className="flex-1">
+              <label htmlFor="model" className="block text-sm font-medium mb-2">
+                Model
+              </label>
+              <select
+                id="model"
+                value={formState.model}
+                onChange={(e) => setFormState(prev => ({ ...prev, model: e.target.value }))}
+                className="w-full p-2 border rounded-md"
+              >
+                {MODEL_OPTIONS[formState.provider].map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label htmlFor="prompt" className="block text-sm font-medium mb-2">
               Enter your prompt
