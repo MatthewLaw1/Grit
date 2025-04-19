@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import type { FormState, ModelProvider, ModelConfig } from './types';
 import { MODEL_OPTIONS } from './types';
+import { StepBox } from './components/StepBox';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
@@ -130,10 +131,24 @@ export default function Home() {
         )}
 
         {formState.response && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-2">Response:</h2>
-            <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap">
-              {formState.response}
+          <div className="mt-8 space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold mb-6 text-primary">Chain of Thought Process</h2>
+              <div className="space-y-6">
+                {formState.response.steps.map((step, index) => (
+                  <StepBox key={index} step={step} index={index} />
+                ))}
+              </div>
+            </div>
+            
+            <div className="border-t-2 border-primary/20 pt-8">
+              <h2 className="text-2xl font-bold mb-4 text-primary">Final Answer</h2>
+              <div className="bg-primary/5 p-6 border-2 border-primary rounded-lg shadow-lg">
+                <div className="font-mono text-sm bg-gray-900 text-white p-4 rounded-md overflow-x-auto mb-4">
+                  <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
+                </div>
+                <div className="whitespace-pre-wrap text-lg">{formState.response.finalAnswer}</div>
+              </div>
             </div>
           </div>
         )}

@@ -48,8 +48,12 @@ Format your response as a JSON object with this structure. Break down the logic 
       ],
     });
 
-    return NextResponse.json({ 
-      response: message.content[0].text
+    // Parse the response text as JSON
+    const responseText = message.content[0].text;
+    const parsedResponse = JSON.parse(responseText);
+    
+    return NextResponse.json({
+      response: parsedResponse
     });
     
   } catch (error) {

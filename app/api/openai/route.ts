@@ -51,8 +51,11 @@ Format your response as a JSON object with this structure. Break down the logic 
       response_format: { type: "json_object" }
     });
 
-    return NextResponse.json({ 
-      response: completion.choices[0].message.content 
+    // The response is already JSON since we specified response_format
+    const parsedResponse = JSON.parse(completion.choices[0].message.content || '{}');
+    
+    return NextResponse.json({
+      response: parsedResponse
     });
     
   } catch (error) {
