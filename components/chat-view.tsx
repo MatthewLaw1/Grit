@@ -57,7 +57,7 @@ export default function ChatView() {
             <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                 className={`max-w-[70%] rounded-lg p-3 ${
-                    message.sender === "user" ? "bg-[#2A394C] text-white" : "bg-[#A1B2C2] text-[#2A394C]"
+                    message.sender === "user" ? "bg-[var(--primary)] text-[var(--foreground)]" : "bg-[var(--secondary)] text-[var(--primary)]"
                 }`}
                 >
                 {message.content}
@@ -78,7 +78,7 @@ export default function ChatView() {
                 }
                 }}
             />
-            <Button onClick={handleSendMessage} className="bg-[#2A394C] hover:bg-[#3A495C]">
+            <Button onClick={handleSendMessage} className="bg-[var(--primary)] hover:bg-[var(--primary-hover)]">
                 <Send size={18} />
             </Button>
             </div>

@@ -10,7 +10,7 @@ interface FlowchartPanelProps {
 export default function FlowchartPanel({ onClose }: FlowchartPanelProps) {
 
     return (
-        <div className="flex-1 flex flex-col bg-[#A1B2C2] rounded-lg overflow-hidden">
+        <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
         
         </div>
     )

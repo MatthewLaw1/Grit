@@ -27,7 +27,7 @@ export default function HeadingsList({ onHeadingSelect }: HeadingsListProps) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 ">
         {headings.map((h) => {
             const isSelected = h.id === selectedId
             return (
@@ -37,15 +37,15 @@ export default function HeadingsList({ onHeadingSelect }: HeadingsListProps) {
                 className={`
                 rounded-md p-4 cursor-pointer transition-colors
                 ${isSelected
-                    ? "bg-[#A1B2C2]"
-                    : "bg-[#D1D8DE] hover:bg-[#C1C8CE]"}
+                    ? "bg-[var(--secondary)] border border-[var(--primary)]"
+                    : "bg-[var(--background)] border border-[var(--secondary)] hover:bg-[var(--foreground)]"}
                 `}
             >
                 <div className="flex justify-between items-center mb-1">
-                <h3 className="font-semibold text-[#2A394C]">{h.title}</h3>
-                <span className="text-xs text-[#2A394C]">x mins</span>
+                <h3 className="font-semibold text-[var(--primary)]">{h.title}</h3>
+                <span className="text-xs text-[var(--primary)]">x mins ago</span>
                 </div>
-                <p className="text-sm text-[#2A394C]">{h.subheading}</p>
+                <p className="text-sm text-[var(--primary)]">{h.subheading}</p>
             </div>
             )
         })}

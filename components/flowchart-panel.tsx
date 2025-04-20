@@ -44,15 +44,15 @@ export default function FlowchartPanel({ onClose }: FlowchartPanelProps) {
     }, [])
 
     return (
-        <div className="flex-1 flex flex-col bg-[#A1B2C2] rounded-lg overflow-hidden">
-        <div className="flex justify-between items-center p-4 bg-[#A1B2C2]">
-            <h2 className="font-bold text-xl text-[#2A394C]">Flowchart</h2>
-            <button onClick={onClose} className="text-[#2A394C] hover:bg-[#8A9BB2] p-1 rounded-full">
+        <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
+        <div className="flex justify-between items-center p-4 bg-[var(--secondary)]">
+            <h2 className="font-bold text-xl text-[var(--primary)]">Flowchart</h2>
+            <button onClick={onClose} className="text-[var(--primary)] hover:bg-[var(--foreground)] p-1 rounded-full">
             <X size={20} />
             </button>
         </div>
 
-        <div className="flex-1 bg-[#D1D8DE] overflow-auto">
+        <div className="flex-1 bg-[var(--background)] overflow-auto">
             <div ref={containerRef} className="w-full h-full"></div>
         </div>
         </div>

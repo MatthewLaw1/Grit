@@ -17,21 +17,21 @@ export default function Home() {
     })
 
     return (
-        <div className="flex h-screen bg-[#D1D8DE]">
+        <div className="flex h-screen bg-[var(--background)]">
         <Sidebar />
 
-        <div className="flex flex-1 overflow-hidden p-4 space-x-4">
+        <div className="flex flex-1 overflow-hidden p-4 space-x-4 bg-[var(--foreground)]">
             {showHeadingsList && (
-            <div className="w-[300px] bg-[#D1D8DE] overflow-y-auto">
+            <div className="w-[300px] bg-[var(--background)] overflow-y-auto p-4 rounded-lg">
                 <div className="relative mb-4">
                 <Search
                     size={18}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--secondary)]"
                 />
                 <input
                     type="text"
                     placeholder="Search"
-                    className="w-full bg-[#F0F0F0] rounded-md py-2 pl-10 pr-4 text-sm"
+                    className="w-full bg-[var(--foreground)] rounded-md py-2 pl-10 pr-4 text-sm"
                 />
                 </div>
                 <HeadingsList onHeadingSelect={setActiveHeading} />
