@@ -3,8 +3,8 @@
 import { useState, FormEvent } from 'react';
 import type { FormState, ModelProvider, ModelConfig, ReasoningStep } from './types';
 import { MODEL_OPTIONS } from './types';
-import { StepBox } from './components/StepBox';
-import { TreeStepBox } from './components/TreeStepBox';
+import { StepBox } from '@/components/StepBox';
+import { TreeStepBox } from '@/components/TreeStepBox';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
