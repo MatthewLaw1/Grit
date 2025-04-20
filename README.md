@@ -1,9 +1,9 @@
-# [Grit]()
-<!-- link to devpost -->
+# [Grit](https://devpost.com/software/grit-1uk8fb)
+
 ### A Human/AI Collaboration framework
 > ### Submission for HackDavis 2025
 
-<img src="/public/Dark.png" alt="DarkThumbnail">
+<img src="/public/dark-thumbnail.png" alt="DarkThumbnail">
 
 <div align="center">
   <p> built with </p>
@@ -11,7 +11,7 @@
 </div>
 
 ### About Grit
-This project integrates the Tree of Thought LLM framework with a Next.js frontend for interactive reasoning visualization.
+Grit isn’t just about seeing inside the AI — it’s about using AI to sharpen human reasoning. It’s a platform that helps teachers and students trace, adapt, and expand on an AI’s chain of thought. Imagine GitHub, but for thinking: You can fork an idea, annotate each step, explore alternative approaches, and even map out where reasoning falters — not just to debug the AI, but to refine your own thinking.
 
 <!-- ### Setup
 1. Clone the repository and install dependencies:
@@ -55,12 +55,15 @@ npm run dev
 3. Open http://localhost:3000 in your browser -->
 
 ### Features
-
-- Toggle between Chain of Thought and Tree of Thought reasoning
+<!-- - Toggle between Chain of Thought and Tree of Thought reasoning
 - Interactive visualization of reasoning steps
 - Support for both OpenAI and Anthropic models
 - Tree-based exploration of multiple reasoning paths
-- Confidence scoring for each reasoning branch
+- Confidence scoring for each reasoning branch -->
+- **Live Chain‑of‑Thought Visualization:** Streams token‑by‑token AI output into a dynamic, interactive graph.  
+- **Branching Deep‑dives:** Click any reasoning step to open a side conversation—define terms, explore sub‑concepts, view code snippets or diagrams—then return to the main thread seamlessly.  
+- **Multimodal Support:** Renders code blocks, LaTeX formulas, and inline diagrams in real time.  
+- **Persistent Context:** Every branch remembers where it came from and reconnects smoothly to the parent chain once you’re ready.
 
 <!-- ### System Architecture
 ![SystemArch]() -->
