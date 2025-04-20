@@ -12,12 +12,16 @@ node_modules
 # Next.js build output
 .next
 .next/
+.next/**/*
+**/.next/**/*
+*.pack.gz
 next/
 
 # Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # System files
 .DS_Store

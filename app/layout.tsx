@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Next.js with Anthropic',
-  description: 'Next.js application with Anthropic API integration',
+  title: 'Grit',
+  description: 'Augmented Reasoning for the AI Era',
 }
 
 export default function RootLayout({
@@ -16,6 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <link rel="icon" href="/favicon.ico" />
       <body className={inter.className}>{children}</body>
     </html>
   )
