@@ -1,4 +1,11 @@
-import { ReasoningStep } from '../types';
+interface ReasoningStep {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+  id: string;
+  parentId?: string;
+  childSteps?: ReasoningStep[];
+}
 
 interface TreeStepBoxProps {
   step: ReasoningStep;

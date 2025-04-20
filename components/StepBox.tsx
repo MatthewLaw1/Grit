@@ -1,4 +1,10 @@
-import { ReasoningStep } from '../types';
+interface ReasoningStep {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+  id: string;
+  parentId?: string;
+}
 
 interface StepBoxProps {
   step: ReasoningStep;
