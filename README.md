@@ -3,7 +3,7 @@
 ### A Human/AI Collaboration framework
 > ### Submission for HackDavis 2025
 
-![Thumbnail]()
+<img src="/Dark.png" alt="DarkThumbnail">
 
 <div align="center">
   <p> built with </p>
