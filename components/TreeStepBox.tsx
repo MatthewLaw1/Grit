@@ -3,18 +3,20 @@ import { ReasoningStep } from '../types';
 interface TreeStepBoxProps {
   step: ReasoningStep;
   index: number;
-  depth?: number;
 }
 
-export function TreeStepBox({ step, index, depth = 0 }: TreeStepBoxProps) {
+export function TreeStepBox({ step, index }: TreeStepBoxProps) {
+  // Find child steps that have this step as their parent
+  const childSteps = step.childSteps || [];
+
   return (
     <div className="relative">
       {/* Connector Line */}
-      {depth > 0 && (
+      {index > 0 && (
         <div className="absolute -top-4 left-5 w-0.5 h-4 bg-primary/30" />
       )}
       
-      <div className={`border-2 border-primary rounded-lg p-6 bg-white shadow-lg ${depth > 0 ? 'ml-8' : ''}`}>
+      <div className="border-2 border-primary rounded-lg p-6 bg-white shadow-lg">
         <div className="flex items-center gap-4 mb-4">
           <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
             {index + 1}
@@ -54,21 +56,20 @@ export function TreeStepBox({ step, index, depth = 0 }: TreeStepBoxProps) {
             </div>
           </div>
         </div>
-
-        {/* Render child steps recursively */}
-        {step.children && step.children.length > 0 && (
-          <div className="mt-8 space-y-8">
-            {step.children.map((childStep, childIndex) => (
-              <TreeStepBox
-                key={childStep.id}
-                step={childStep}
-                index={childIndex}
-                depth={depth + 1}
-              />
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Render child steps with indentation */}
+      {childSteps.length > 0 && (
+        <div className="ml-8 mt-4 space-y-8">
+          {childSteps.map((childStep: ReasoningStep, childIndex: number) => (
+            <TreeStepBox
+              key={childStep.id}
+              step={childStep}
+              index={childIndex}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

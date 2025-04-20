@@ -115,7 +115,7 @@ export default function Home() {
                   onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'chain' }))}
                   className={`flex-1 p-2 rounded-md border ${
                     formState.thoughtMode === 'chain'
-                      ? 'bg-primary text-white border-primary'
+                      ? 'bg-blue-600 text-white border-blue-600'
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -126,7 +126,7 @@ export default function Home() {
                   onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'tree' }))}
                   className={`flex-1 p-2 rounded-md border ${
                     formState.thoughtMode === 'tree'
-                      ? 'bg-primary text-white border-primary'
+                      ? 'bg-blue-600 text-white border-blue-600'
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -152,7 +152,7 @@ export default function Home() {
           <button
             type="submit"
             disabled={formState.isLoading || !formState.prompt}
-            className="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
+            className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base"
           >
             {formState.isLoading ? 'Processing...' : 'Submit'}
           </button>
@@ -168,10 +168,10 @@ export default function Home() {
           <div className="mt-8 space-y-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-primary">
+                <h2 className="text-2xl font-bold text-blue-600">
                   {formState.thoughtMode === 'chain' ? 'Chain' : 'Tree'} of Thought Process
                 </h2>
-                <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
                   {formState.response.steps.length} Steps
                 </div>
               </div>
@@ -193,23 +193,23 @@ export default function Home() {
             
             <div className="relative">
               {/* Connector from last step to final answer */}
-              <div className="absolute -top-8 left-5 w-0.5 h-8 bg-primary/30" />
+              <div className="absolute -top-8 left-5 w-0.5 h-8 bg-blue-300" />
               
-              <div className="border-t-2 border-primary/20 pt-8">
+              <div className="border-t-2 border-blue-200 pt-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <h2 className="text-2xl font-bold text-primary">Final Answer</h2>
-                  <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
+                  <h2 className="text-2xl font-bold text-blue-600">Final Answer</h2>
+                  <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
                     Result
                   </div>
                 </div>
-                <div className="bg-primary/5 p-6 border-2 border-primary rounded-lg shadow-lg">
+                <div className="bg-blue-50 p-6 border-2 border-blue-200 rounded-lg shadow-lg">
                   <div className="relative">
                     <div className="absolute top-2 right-2 text-xs text-gray-500">Final Answer JSON</div>
                     <div className="font-mono text-sm bg-gray-900 text-white p-4 pt-8 rounded-md overflow-x-auto mb-4">
                       <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
                     </div>
                   </div>
-                  <div className="mt-4 p-4 bg-white rounded-lg border border-primary/20">
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
                     <div className="whitespace-pre-wrap text-lg text-gray-800">{formState.response.finalAnswer}</div>
                   </div>
                 </div>
