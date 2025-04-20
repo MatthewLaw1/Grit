@@ -137,3 +137,11 @@ svg {
   background-color: var(--primary);
   color: var(--background);
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;     
+}

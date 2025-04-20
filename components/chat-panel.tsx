@@ -1,28 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, X, ArrowLeft, ExternalLink } from "lucide-react";
-
-interface Step {
-  goal: string;
-  reasoning: string;
-  conclusion: string;
-  id: string;
-  parentId?: string;
-}
-
-interface ParsedMessage {
-  content: string;
-  steps?: Step[];
-  parentStepId?: string;
-}
+import { Send, X, ArrowLeft, FolderTree } from "lucide-react";
 
 export interface Message {
   id: number;
   sender: "user" | "bot";
   content: string;
   timestamp: string;
-  parent_step_id?: string;
+}
+
+export interface ParsedMessage {
+  content: string;
+  steps?: { id: string; goal: string; reasoning: string; conclusion: string }[];
+  parentStepId?: string;
 }
 
 interface ChatPanelProps {
@@ -32,37 +23,11 @@ interface ChatPanelProps {
   onClose: () => void;
   messages: Message[];
   loading: boolean;
-  onSendMessage: (
-    text: string,
-    parentStepId?: string,
-    parentStep?: Step
-  ) => void;
+  onSendMessage: (text: string, parentStepId?: string) => void;
   parseMessage: (msg: Message) => ParsedMessage;
   onExploreStep?: (stepId: string) => void;
   onReturnToMain?: () => void;
 }
-
-// Helper function to parse messages
-const parseMessageDefault = (msg: Message): ParsedMessage => {
-  try {
-    const parsed = JSON.parse(msg.content);
-    if (msg.sender === "user") {
-      return {
-        content: parsed.text,
-        parentStepId: parsed.parentStepId,
-      };
-    } else {
-      return {
-        content: parsed.finalAnswer,
-        steps: parsed.steps,
-        parentStepId: parsed.parentStepId,
-      };
-    }
-  } catch {
-    // Fallback for old messages or parsing errors
-    return { content: msg.content };
-  }
-};
 
 export default function ChatPanel({
   title,
@@ -71,177 +36,163 @@ export default function ChatPanel({
   messages,
   loading,
   onSendMessage,
-  parseMessage = parseMessageDefault,
+  parseMessage,
   onExploreStep,
   onReturnToMain,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [exploringStepId, setExploringStepId] = useState<string | null>(null);
-  const [selectedStep, setSelectedStep] = useState<Step | null>(null);
-
-  // Ref for messages container to autoscroll
+  const [selectedStep, setSelectedStep] = useState<{ id: string; goal: string; reasoning: string; conclusion: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle autoscroll on new messages or exploration
+  // auto‑scroll on new content
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [messages, exploringStepId]);
 
-  // Find the original message containing the step being explored
+  // find the selected step’s details
   useEffect(() => {
     if (!exploringStepId) {
       setSelectedStep(null);
       return;
     }
-
-    for (const msg of messages) {
-      const parsed = parseMessage(msg);
-      if (parsed.steps) {
-        const step = parsed.steps.find((s) => s.id === exploringStepId);
+    for (let msg of messages) {
+      const { steps } = parseMessage(msg);
+      if (steps) {
+        const step = steps.find((s) => s.id === exploringStepId);
         if (step) {
-          setSelectedStep(step);
-          break;
+          setSelectedStep(step as any);
+          return;
         }
       }
     }
   }, [exploringStepId, messages, parseMessage]);
 
   const handleSend = () => {
-    const text = input.trim();
-    if (!text) return;
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    onSendMessage(trimmed, exploringStepId || undefined);
     setInput("");
-    onSendMessage(
-      text,
-      exploringStepId || undefined,
-      selectedStep || undefined
-    );
   };
 
-  const startExploringStep = (stepId: string) => {
-    setExploringStepId(stepId);
-    onExploreStep?.(stepId);
+  const startExplore = (id: string) => {
+    setExploringStepId(id);
+    onExploreStep?.(id);
   };
-
-  const stopExploringStep = () => {
+  const stopExplore = () => {
     setExploringStepId(null);
     setSelectedStep(null);
     onReturnToMain?.();
   };
 
-  // Filter messages based on exploration context
-  const relevantMessages = messages.filter((msg) => {
-    const parsed = parseMessage(msg);
-    return exploringStepId
-      ? parsed.parentStepId === exploringStepId
-      : !parsed.parentStepId;
+  // show only messages relevant to current exploration context
+  const relevant = messages.filter((msg) => {
+    const { parentStepId } = parseMessage(msg);
+    return exploringStepId ? parentStepId === exploringStepId : !parentStepId;
   });
 
   return (
-    <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
-      {/* header */}
-      <div className="flex justify-between items-center p-4 bg-[var(--secondary)]">
+    <div className="flex-1 flex flex-col min-h-0 h-full bg-[var(--secondary)] rounded-lg overflow-hidden text-sm">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between p-4 bg-[var(--secondary)]">
         <div className="flex items-center gap-3">
           {exploringStepId && (
             <button
-              onClick={stopExploringStep}
-              className="text-[var(--primary)] hover:bg-[var(--background)] p-1 rounded-full"
+              onClick={stopExplore}
+              className="p-1 text-white hover:bg-[var(--background)] rounded"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </button>
           )}
           <div>
-            <h2 className="font-bold text-xl text-white">{title}</h2>
-            <p className="text-sm text-white">
-              {exploringStepId ? "Exploring reasoning step" : subheading}
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+            <p className="text-xs text-gray-200">
+              {exploringStepId ? "Exploring Reasoning Step" : subheading}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-white p-1 rounded-full hover:bg-[var(--background)]"
+          className="p-1 text-white hover:bg-[var(--background)] rounded"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
       </div>
 
-      {/* Selected step context */}
+      {/* ── Step Details Card ── */}
       {selectedStep && (
-        <div className="px-4 py-3 bg-blue-50 border-y border-blue-100">
-          <div className="text-sm text-blue-800 font-medium mb-2">
-            Currently exploring:
+        <div className="m-4 p-4 bg-[var(--foreground)] rounded-lg shadow-inner border-l-4 border-[var(--primary)]">
+          <div className="inline-flex items-center mb-3 text-[var(--primary)]">
+            {/* <FolderTree size={4} className="mr-2" /> */}
+            <h3 className="text-lg font-semibold">Step Details</h3>
           </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm">
-            <div className="font-medium text-gray-800">
-              Goal: {selectedStep.goal}
+          <div className="space-y-2 text-gray-800">
+            <div>
+              <h4 className="font-bold text-[var(--secondary)]">Goal</h4>
+              <p>{selectedStep.goal}</p>
             </div>
-            <div className="text-gray-600 mt-1">
-              Reasoning: {selectedStep.reasoning}
+            <div>
+              <h4 className="font-bold text-[var(--secondary)]">Reasoning</h4>
+              <p>{selectedStep.reasoning}</p>
             </div>
-            <div className="font-medium text-gray-800 mt-1">
-              Conclusion: {selectedStep.conclusion}
+            <div>
+              <h4 className="font-bold text-[var(--secondary)]">Conclusion</h4>
+              <p>{selectedStep.conclusion}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* messages list */}
+      {/* ── Message List ── */}
       <div
         ref={containerRef}
-        className="flex-1 p-4 overflow-y-auto space-y-4"
+        className="flex-1 min-h-0 overflow-y-auto p-4 space-y-6 no-scrollbar"
       >
         {loading ? (
-          <p className="text-[var(--primary)]">Loading…</p>
-        ) : relevantMessages.length === 0 ? (
-          <p className="italic text-[var(--primary)] text-center">
+          <div className="flex flex-1 items-center justify-center py-10">
+            <div className="w-6 h-6 border-4 border-[var(--background)] border-t-[var(--primary)] rounded-full animate-spin" />
+          </div>
+        ) : relevant.length === 0 ? (
+          <div className="text-gray-400 italic text-center">
             {exploringStepId
-              ? "Start exploring this reasoning step..."
-              : "No messages yet"}
-          </p>
+              ? "No replies in this step yet."
+              : "Send a message to start the conversation."}
+          </div>
         ) : (
-          relevantMessages.map((msg) => {
-            const parsed = parseMessage(msg);
+          relevant.map((msg) => {
+            const { content, steps } = parseMessage(msg);
+            const isUser = msg.sender === "user";
             return (
               <div
                 key={msg.id}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${isUser ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    msg.sender === "user"
-                      ? "bg-[var(--primary)] text-[var(--foreground)]"
-                      : "bg-[var(--background)] text-[var(--primary)]"
+                  className={`max-w-[75%] p-4 rounded-xl shadow-md ${
+                    isUser
+                      ? "bg-[var(--primary)] text-white"
+                      : "bg-white text-[var(--primary)]"
                   }`}
                 >
-                  {parsed.content}
-                  {msg.sender === "bot" && parsed.steps && !exploringStepId && (
-                    <div className="mt-3 border-t border-gray-200 pt-3">
-                      <div className="text-sm font-medium mb-2">
-                        Reasoning Steps:
-                      </div>
-                      {parsed.steps.map((step) => (
-                        <div key={step.id} className="mb-3 text-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="font-medium">
-                              Goal: {step.goal}
-                            </div>
-                            <button
-                              onClick={() => startExploringStep(step.id)}
-                              className="text-blue-500 hover:text-blue-600 flex items-center gap-1 text-xs"
-                            >
-                              <ExternalLink size={12} />
-                              Explore this reasoning
-                            </button>
-                          </div>
-                          <div className="text-gray-600">
-                            Reasoning: {step.reasoning}
-                          </div>
-                          <div className="font-medium mt-1">
-                            Conclusion: {step.conclusion}
-                          </div>
+                  <p className="leading-relaxed">{content}</p>
+
+                  {!isUser && steps && !exploringStepId && (
+                    <div className="mt-4 grid gap-3">
+                      {steps.map((s) => (
+                        <div
+                          key={s.id}
+                          className="p-3 bg-[var(--foreground)] rounded-lg shadow-sm flex justify-between items-center"
+                        >
+                          <span className="font-semibold text-sm">{s.goal}</span>
+                          <button
+                            onClick={() => startExplore(s.id)}
+                            className="inline-flex items-center text-[var(--primary)] text-xs font-medium"
+                          >
+                            <FolderTree size={14} className="mr-1" />
+                            Explore
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -253,27 +204,22 @@ export default function ChatPanel({
         )}
       </div>
 
-      {/* input */}
+      {/* ── Input Bar ── */}
       <div className="p-4 bg-[var(--secondary)]">
-        {exploringStepId && (
-          <div className="mb-2 px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full inline-block">
-            Exploring reasoning step
-          </div>
-        )}
-        <div className="flex bg-[var(--background)] rounded-full overflow-hidden">
+        <div className="flex items-center bg-[var(--background)] rounded-full overflow-hidden">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={
               exploringStepId
-                ? "Ask about this reasoning step..."
+                ? "Ask a follow-up on this step…"
                 : "Type your message…"
             }
-            className="flex-1 px-4 py-2 bg-transparent outline-none"
+            className="flex-1 px-4 py-2 text-sm bg-transparent outline-none"
           />
           <button onClick={handleSend} className="p-2">
-            <Send size={20} className="text-[var(--primary)]" />
+            <Send size={18} className="text-[var(--primary)]" />
           </button>
         </div>
       </div>
