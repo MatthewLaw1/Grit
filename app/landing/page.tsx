@@ -57,7 +57,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-6 flex justify-center space-x-4">
                 <button
-                    onClick={() => window.location.href = "/get-started"}
+                    onClick={() => window.location.href = "/dashboard"}
                     className="px-6 py-2 bg-[var(--primary)] text-white rounded-full hover:opacity-90 transition"
                 >
                     Get Started
