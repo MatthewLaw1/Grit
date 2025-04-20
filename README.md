@@ -1,6 +1,7 @@
-# [Grit - A Human/AI Collaboration framework]()
+# [Grit]()
 <!-- link to devpost -->
-> ### Submission for Hack Davis 2025
+### A Human/AI Collaboration framework
+> ### Submission for HackDavis 2025
 
 ![Thumbnail]()
 
