@@ -1,255 +1,152 @@
-"use client";
+"use client"
 
-import { useState, FormEvent } from "react";
-import type {
-  FormState,
-  ModelProvider,
-  ModelConfig,
-  ReasoningStep,
-} from "./types";
-import { MODEL_OPTIONS } from "./types";
-import { StepBox } from "@/components/StepBox";
-import { TreeStepBox } from "@/components/TreeStepBox";
+import { motion } from "framer-motion";
+import Image from 'next/image';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, Plus, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
-export default function Home() {
-  const [formState, setFormState] = useState<FormState>({
-    prompt: "",
-    response: null,
-    error: null,
-    isLoading: false,
-    provider: "anthropic",
-    model: "claude-3-sonnet-20240229",
-    thoughtMode: "chain",
-  });
+export default function LandingPage() {
+    const thumbnails: number[] = [1, 2, 3, 4];
+    const [active, setActive] = useState<number>(0);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    return (
+        <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--secondary)]">
+        <header className="sticky top-0 z-50 backdrop-blur bg-[var(--foreground)] bg-opacity-80 shadow-md">
+            <div className="container mx-auto flex items-center justify-between py-4 px-6 lg:px-8">
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center space-x-3"
+            >
+                <Image src="/icon-black.png" alt="Logo" width={48} height={48} />
+                <span className="text-2xl font-bold">Grit</span>
+            </motion.div>
 
-    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const endpoint =
-        formState.thoughtMode === "tree"
-          ? "/api/tot"
-          : `/api/${formState.provider}`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: formState.prompt,
-          model: formState.model,
-          thoughtMode: formState.thoughtMode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to get response");
-      }
-
-      setFormState((prev) => ({
-        ...prev,
-        response: data.response,
-        isLoading: false,
-      }));
-    } catch (error) {
-      setFormState((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "An error occurred",
-        isLoading: false,
-      }));
-    }
-  };
-
-  const handleProviderChange = (provider: ModelProvider) => {
-    const defaultModel = MODEL_OPTIONS[provider][0].value;
-    setFormState((prev) => ({
-      ...prev,
-      provider,
-      model: defaultModel,
-    }));
-  };
-
-  return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">AI Model Integration</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-4 mb-4 items-end">
-            <div className="flex-1">
-              <label
-                htmlFor="provider"
-                className="block text-sm font-medium mb-2"
-              >
-                Provider
-              </label>
-              <select
-                id="provider"
-                value={formState.provider}
-                onChange={(e) =>
-                  handleProviderChange(e.target.value as ModelProvider)
-                }
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="anthropic">Anthropic</option>
-                <option value="openai">OpenAI</option>
-              </select>
-            </div>
-
-            <div className="flex-1">
-              <label htmlFor="model" className="block text-sm font-medium mb-2">
-                Model
-              </label>
-              <select
-                id="model"
-                value={formState.model}
-                onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, model: e.target.value }))
-                }
-                className="w-full p-2 border rounded-md"
-              >
-                {MODEL_OPTIONS[formState.provider].map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+            <nav className="hidden md:flex space-x-6">
+                {['Features', 'Pricing', 'Docs'].map((item) => (
+                <a
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    className="hover:text-[var(--primary)] transition"
+                >
+                    {item}
+                </a>
                 ))}
-              </select>
-            </div>
+            </nav>
 
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">
-                Reasoning Mode
-              </label>
-              <div className="flex gap-2">
+            <div className="flex items-center space-x-3">
+                <Button size="sm" className="bg-[var(--secondary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
+                Log In
+                </Button>
+                <Button size="sm" className="bg-[var(--primary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
+                Sign Up
+                </Button>
+            </div>
+            </div>
+        </header>
+
+        <section className="relative flex-1 flex flex-col items-center justify-center text-center px-6 space-y-24 lg:px-0">
+            <div className="absolute inset-0" />
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative max-w-2xl"
+            >
+            <Image src="/icon-black.png" alt="Grit Logo" width={72} height={72} className="mx-auto mb-4" />
+            <h1 className="text-5xl lg:text-6xl font-extrabold text-[var(--secondary)]">
+                Reveal AI&apos;s Chain<br/>of Thought
+            </h1>
+            <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto">
+                Engage with each step of an AI&apos;s reasoning. Dive deeper, ask questions,
+                and learn interactively.
+            </p>
+            <div className="mt-6 flex justify-center space-x-4">
                 <button
-                  type="button"
-                  onClick={() =>
-                    setFormState((prev) => ({ ...prev, thoughtMode: "chain" }))
-                  }
-                  className={`flex-1 p-2 rounded-md border ${
-                    formState.thoughtMode === "chain"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-gray-300 hover:bg-gray-50"
-                  }`}
+                    onClick={() => window.location.href = "/dashboard"}
+                    className="px-6 py-2 bg-[var(--primary)] text-white rounded-full hover:opacity-90 transition"
                 >
-                  Chain of Thought
+                    Get Started
                 </button>
                 <button
-                  type="button"
-                  onClick={() =>
-                    setFormState((prev) => ({ ...prev, thoughtMode: "tree" }))
-                  }
-                  className={`flex-1 p-2 rounded-md border ${
-                    formState.thoughtMode === "tree"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-gray-300 hover:bg-gray-50"
-                  }`}
+                    onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+                    className="px-6 py-2 border border-gray-300 rounded-full hover:bg-gray-100 transition"
                 >
-                  Tree of Thought
+                    Learn More
                 </button>
-              </div>
             </div>
-          </div>
+            </motion.div>
+        </section>
 
-          <div>
-            <label htmlFor="prompt" className="block text-sm font-medium mb-2">
-              Enter your prompt
-            </label>
-            <textarea
-              id="prompt"
-              value={formState.prompt}
-              onChange={(e) =>
-                setFormState((prev) => ({ ...prev, prompt: e.target.value }))
-              }
-              className="w-full p-2 border rounded-md min-h-[100px]"
-              placeholder="Type your prompt here..."
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={formState.isLoading || !formState.prompt}
-            className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base"
-          >
-            {formState.isLoading ? "Processing..." : "Submit"}
-          </button>
-        </form>
-
-        {formState.error && (
-          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-md">
-            {formState.error}
-          </div>
-        )}
-
-        {formState.response && (
-          <div className="mt-8 space-y-12">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-blue-600">
-                  {formState.thoughtMode === "chain" ? "Chain" : "Tree"} of
-                  Thought Process
-                </h2>
-                <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
-                  {formState.response.steps.length} Steps
+        <section className="flex flex-col lg:flex-row items-center justify-center px-6 space-y-6 lg:space-y-0 lg:space-x-12">
+                <div className="flex flex-col space-y-4">
+                    {thumbnails.map((_, idx) => (
+                        <motion.div
+                            key={idx}
+                            whileHover={{ scale: 1.1 }}
+                            className={`w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition ${
+                                active === idx ? "ring-4 ring-[var(--primary)]" : "opacity-60"
+                            }`}
+                            onClick={() => setActive(idx)}
+                        >
+                            <img
+                                src={`https://via.placeholder.com/100?text=Thumb+${idx + 1}`}
+                                alt={`Thumbnail ${idx + 1}`}
+                                className="object-cover w-full h-full"
+                            />
+                        </motion.div>
+                    ))}
                 </div>
-              </div>
-              <div className="space-y-8">
-                {formState.thoughtMode === "chain"
-                  ? formState.response.steps.map((step, index) => (
-                      <StepBox key={index} step={step} index={index} />
-                    ))
-                  : // For tree mode, only render top-level steps (those without parents)
-                    formState.response.steps
-                      .filter((step: ReasoningStep) => !step.parentId)
-                      .map((step, index) => (
-                        <TreeStepBox key={step.id} step={step} index={index} />
-                      ))}
-              </div>
+                <motion.div
+                    key={active}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-3xl rounded-xl overflow-hidden shadow-2xl"
+                >
+                    <img
+                        src={`https://via.placeholder.com/800x500?text=Preview+${active + 1}`}
+                        alt={`Preview ${active + 1}`}
+                        className="w-full h-auto"
+                    />
+                </motion.div>
+            </section>
+
+        <section id="features" className="py-20 px-6 lg:px-20">
+            <h2 className="text-4xl font-bold text-center text-[var(--secondary)] mb-12">Features</h2>
+            <div className="container mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+                { title: 'Live Visualization', desc: 'Watch token-by-token reasoning unfold in real time.' },
+                { title: 'Deep Dive Branches', desc: 'Explore sub-thoughts without losing context.' },
+                { title: 'Multimodal Support', desc: 'Render code, math, diagrams seamlessly.' },
+            ].map((feature, i) => (
+                <Card key={i} className="hover:shadow-lg transition-shadow bg-[var(--foreground)]">
+                <CardHeader>
+                    <CardTitle className="text-xl text-[var(--primary)]">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-gray-600">{feature.desc}</p>
+                </CardContent>
+                </Card>
+            ))}
             </div>
+        </section>
 
-            <div className="relative">
-              {/* Connector from last step to final answer */}
-              <div className="absolute -top-8 left-5 w-0.5 h-8 bg-blue-300" />
-
-              <div className="border-t-2 border-blue-200 pt-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <h2 className="text-2xl font-bold text-blue-600">
-                    Final Answer
-                  </h2>
-                  <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
-                    Result
-                  </div>
-                </div>
-                <div className="bg-blue-50 p-6 border-2 border-blue-200 rounded-lg shadow-lg">
-                  <div className="relative">
-                    <div className="absolute top-2 right-2 text-xs text-gray-500">
-                      Final Answer JSON
-                    </div>
-                    <div className="font-mono text-sm bg-gray-900 text-white p-4 pt-8 rounded-md overflow-x-auto mb-4">
-                      <pre>
-                        {JSON.stringify(
-                          { finalAnswer: formState.response.finalAnswer },
-                          null,
-                          2
-                        )}
-                      </pre>
-                    </div>
-                  </div>
-                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
-                    <div className="whitespace-pre-wrap text-lg text-gray-800">
-                      {formState.response.finalAnswer}
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <footer className="bg-[var(--secondary)] text-gray-200 py-6">
+            <div className="container mx-auto flex flex-col md:flex-row items-center justify-between px-6 lg:px-20">
+            <span>&copy; {new Date().getFullYear()} Grit. All rights reserved.</span>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+                {['Privacy', 'Terms', 'Contact'].map((item) => (
+                <a key={item} href="#" className="hover:text-white transition">
+                    {item}
+                </a>
+                ))}
             </div>
-          </div>
-        )}
-      </div>
-    </main>
-  );
+            </div>
+        </footer>
+        </div>
+    );
 }
