@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Markmap } from "markmap-view";
+import { Markmap, IMarkmapOptions } from "markmap-view";
 import { Transformer } from "markmap-lib";
 import { X, Eye, EyeOff } from "lucide-react";
 import { Message } from "./chat-panel";
@@ -27,6 +27,7 @@ interface FlowchartPanelProps {
   focusedStepId?: string;
 }
 
+// Configure Markmap transformer with HTML support
 const transformer = new Transformer();
 
 export default function FlowchartPanel({
@@ -42,10 +43,65 @@ export default function FlowchartPanel({
   useEffect(() => {
     if (!svgRef.current) return;
 
-    // Initialize Markmap if not already done
+    // Initialize Markmap with HTML support
     if (!mmRef.current) {
-      mmRef.current = Markmap.create(svgRef.current);
+      const options: Partial<IMarkmapOptions> = {
+        nodeMinHeight: 16,
+        spacingVertical: 5,
+        spacingHorizontal: 80,
+        autoFit: true,
+        duration: 350,
+        embedGlobalCSS: true,
+        fitRatio: 0.95,
+        maxWidth: 300,
+        initialExpandLevel: -1, // expand all levels
+        color: (node) => "inherit",
+      };
+      mmRef.current = Markmap.create(svgRef.current, options);
     }
+
+    // Add click handler for expandable text
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("expandable-text")) {
+        e.stopPropagation(); // Prevent node collapse/expand
+        const isExpanded = target.classList.contains("expanded");
+        const fullText = target.getAttribute("data-full");
+        const truncatedText = target.getAttribute("data-truncated");
+
+        if (isExpanded) {
+          target.textContent = truncatedText;
+          target.classList.remove("expanded");
+        } else {
+          target.textContent = fullText;
+          target.classList.add("expanded");
+        }
+
+        // Refresh the markmap to adjust to new text size
+        if (mmRef.current) {
+          mmRef.current.fit();
+        }
+      }
+    };
+
+    svgRef.current.addEventListener("click", handleClick);
+
+    // Add custom CSS for expandable text
+    const style = document.createElement("style");
+    style.textContent = `
+      .markmap-node .expandable-text {
+        cursor: pointer;
+        text-decoration: underline dotted;
+        color: inherit;
+      }
+      .markmap-node .expandable-text:hover {
+        opacity: 0.8;
+      }
+      .markmap-node .expandable-text.expanded {
+        text-decoration: none;
+      }
+    `;
+    document.head.appendChild(style);
 
     // Convert messages to markdown structure
     const markdown = generateMarkdown(
@@ -61,6 +117,13 @@ export default function FlowchartPanel({
     // Render the markmap
     mmRef.current.setData(root);
     mmRef.current.fit();
+
+    return () => {
+      if (svgRef.current) {
+        svgRef.current.removeEventListener("click", handleClick);
+      }
+      style.remove();
+    };
   }, [messages, parseMessage, focusedStepId, showSubDetails]);
 
   return (
@@ -101,17 +164,29 @@ export default function FlowchartPanel({
   );
 }
 
+function truncateText(text: string, maxLength: number = 80): string {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + "...";
+}
+
+function wrapWithTooltip(text: string, maxLength: number = 80): string {
+  if (text.length <= maxLength) return text;
+  const truncated = truncateText(text, maxLength);
+  // Create a clickable span with data attributes for the full text
+  return `<span class="expandable-text" data-full="${text.replace(
+    /"/g,
+    "&quot;"
+  )}" data-truncated="${truncated}">${truncated}</span>`;
+}
+
 function generateMarkdown(
   messages: Message[],
   parseMessage: (msg: Message) => ParsedMessage,
   focusedStepId?: string,
   showSubDetails: boolean = false
 ): string {
-  // If focusing on a specific step
   if (focusedStepId) {
     let markdown = "";
-
-    // Find the original message containing this step
     let originalMessage: Message | undefined;
     let targetStep: Step | undefined;
 
@@ -128,11 +203,17 @@ function generateMarkdown(
     }
 
     if (targetStep) {
-      markdown += `\n## 🔍 Exploring Goal: ${targetStep.goal}\n`;
-      markdown += `  - 🤔 Reasoning: ${targetStep.reasoning}\n`;
-      markdown += `  - ✨ Conclusion: ${targetStep.conclusion}\n`;
+      markdown += `\n## 🔍 Exploring Goal: ${wrapWithTooltip(
+        targetStep.goal
+      )}\n`;
+      markdown += `  - 🤔 Reasoning: ${wrapWithTooltip(
+        targetStep.reasoning,
+        80
+      )}\n`;
+      markdown += `  - ✨ Conclusion: ${wrapWithTooltip(
+        targetStep.conclusion
+      )}\n`;
 
-      // Get all exploration messages for this step
       const explorationMessages = messages.filter((msg) => {
         const parsed = parseMessage(msg);
         return parsed.parentStepId === focusedStepId;
@@ -150,13 +231,25 @@ function generateMarkdown(
           } else {
             currentAiResponse = expParsed;
             if (currentUserQuestion && currentAiResponse) {
-              markdown += `- ❓ Question: ${currentUserQuestion}\n`;
-              markdown += `  - 💡 Answer: ${currentAiResponse.content}\n`;
+              markdown += `- ❓ Question: ${wrapWithTooltip(
+                currentUserQuestion
+              )}\n`;
+              markdown += `  - 💡 Answer: ${wrapWithTooltip(
+                currentAiResponse.content,
+                80
+              )}\n`;
               if (showSubDetails && currentAiResponse.steps) {
                 currentAiResponse.steps.forEach((expStep) => {
-                  markdown += `  - 🎯 Sub-Goal: ${expStep.goal}\n`;
-                  markdown += `    - 🤔 Sub-Reasoning: ${expStep.reasoning}\n`;
-                  markdown += `    - ✨ Sub-Conclusion: ${expStep.conclusion}\n`;
+                  markdown += `  - 🎯 Sub-Goal: ${wrapWithTooltip(
+                    expStep.goal
+                  )}\n`;
+                  markdown += `    - 🤔 Sub-Reasoning: ${wrapWithTooltip(
+                    expStep.reasoning,
+                    80
+                  )}\n`;
+                  markdown += `    - ✨ Sub-Conclusion: ${wrapWithTooltip(
+                    expStep.conclusion
+                  )}\n`;
                 });
               }
               currentUserQuestion = "";
@@ -170,7 +263,6 @@ function generateMarkdown(
     }
   }
 
-  // Default full visualization
   let markdown = "# 💭 Thought Process\n";
 
   const messageTree = new Map<string | undefined, Message[]>();
@@ -184,21 +276,23 @@ function generateMarkdown(
   });
 
   const mainMessages = messageTree.get(undefined) || [];
-  let conversationCount = 1;
 
   mainMessages.forEach((msg) => {
     const parsed = parseMessage(msg);
 
     if (msg.sender === "user") {
-      markdown += `\n## 👤 ${parsed.content}\n`;
+      markdown += `\n## 👤 ${wrapWithTooltip(parsed.content)}\n`;
     } else if (msg.sender === "bot" && parsed.steps) {
-      markdown += `\n## 🤖 ${parsed.content}\n`;
+      markdown += `\n## 🤖 ${wrapWithTooltip(parsed.content, 80)}\n`;
       markdown += `\n## 🔄 Reasoning Steps\n`;
 
       parsed.steps.forEach((step) => {
-        markdown += ` - 🎯 Goal: ${step.goal}\n`;
-        markdown += `   - 🤔 Reasoning: ${step.reasoning}\n`;
-        markdown += `   - ✨ Conclusion: ${step.conclusion}\n`;
+        markdown += ` - 🎯 Goal: ${wrapWithTooltip(step.goal)}\n`;
+        markdown += `   - 🤔 Reasoning: ${wrapWithTooltip(
+          step.reasoning,
+          80
+        )}\n`;
+        markdown += `   - ✨ Conclusion: ${wrapWithTooltip(step.conclusion)}\n`;
 
         const explorationMessages = messageTree.get(step.id) || [];
         if (explorationMessages.length > 0) {
@@ -213,13 +307,25 @@ function generateMarkdown(
             } else {
               currentAiResponse = expParsed;
               if (currentUserQuestion && currentAiResponse) {
-                markdown += `     - ❓ Question: ${currentUserQuestion}\n`;
-                markdown += `       - 💡 Answer: ${currentAiResponse.content}\n`;
+                markdown += `     - ❓ Question: ${wrapWithTooltip(
+                  currentUserQuestion
+                )}\n`;
+                markdown += `       - 💡 Answer: ${wrapWithTooltip(
+                  currentAiResponse.content,
+                  80
+                )}\n`;
                 if (showSubDetails && currentAiResponse.steps) {
                   currentAiResponse.steps.forEach((expStep) => {
-                    markdown += `         - 🎯 Sub-Goal: ${expStep.goal}\n`;
-                    markdown += `           - 🤔 Sub-Reasoning: ${expStep.reasoning}\n`;
-                    markdown += `           - ✨ Sub-Conclusion: ${expStep.conclusion}\n`;
+                    markdown += `         - 🎯 Sub-Goal: ${wrapWithTooltip(
+                      expStep.goal
+                    )}\n`;
+                    markdown += `           - 🤔 Sub-Reasoning: ${wrapWithTooltip(
+                      expStep.reasoning,
+                      80
+                    )}\n`;
+                    markdown += `           - ✨ Sub-Conclusion: ${wrapWithTooltip(
+                      expStep.conclusion
+                    )}\n`;
                   });
                 }
                 currentUserQuestion = "";
@@ -229,7 +335,6 @@ function generateMarkdown(
           });
         }
       });
-      conversationCount++;
     }
   });
 
