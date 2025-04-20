@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, X, ArrowLeft, ExternalLink } from "lucide-react";
 
 interface Step {
@@ -22,6 +22,7 @@ export interface Message {
   sender: "user" | "bot";
   content: string;
   timestamp: string;
+  parent_step_id?: string;
 }
 
 interface ChatPanelProps {
@@ -42,7 +43,7 @@ interface ChatPanelProps {
 }
 
 // Helper function to parse messages
-const parseMessage = (msg: Message): ParsedMessage => {
+const parseMessageDefault = (msg: Message): ParsedMessage => {
   try {
     const parsed = JSON.parse(msg.content);
     if (msg.sender === "user") {
@@ -64,20 +65,29 @@ const parseMessage = (msg: Message): ParsedMessage => {
 };
 
 export default function ChatPanel({
-  chatId,
   title,
   subheading,
   onClose,
   messages,
   loading,
   onSendMessage,
-  parseMessage,
+  parseMessage = parseMessageDefault,
   onExploreStep,
   onReturnToMain,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [exploringStepId, setExploringStepId] = useState<string | null>(null);
   const [selectedStep, setSelectedStep] = useState<Step | null>(null);
+
+  // Ref for messages container to autoscroll
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle autoscroll on new messages or exploration
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages, exploringStepId]);
 
   // Find the original message containing the step being explored
   useEffect(() => {
@@ -86,7 +96,6 @@ export default function ChatPanel({
       return;
     }
 
-    // Look through all messages to find the step
     for (const msg of messages) {
       const parsed = parseMessage(msg);
       if (parsed.steps) {
@@ -112,19 +121,13 @@ export default function ChatPanel({
 
   const startExploringStep = (stepId: string) => {
     setExploringStepId(stepId);
-    // Emit the step ID to parent component
-    if (onExploreStep) {
-      onExploreStep(stepId);
-    }
+    onExploreStep?.(stepId);
   };
 
   const stopExploringStep = () => {
     setExploringStepId(null);
     setSelectedStep(null);
-    // Notify parent component
-    if (onReturnToMain) {
-      onReturnToMain();
-    }
+    onReturnToMain?.();
   };
 
   // Filter messages based on exploration context
@@ -184,7 +187,10 @@ export default function ChatPanel({
       )}
 
       {/* messages list */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div
+        ref={containerRef}
+        className="flex-1 p-4 overflow-y-auto space-y-4"
+      >
         {loading ? (
           <p className="text-[var(--primary)]">Loading…</p>
         ) : relevantMessages.length === 0 ? (
@@ -219,7 +225,9 @@ export default function ChatPanel({
                       {parsed.steps.map((step) => (
                         <div key={step.id} className="mb-3 text-sm">
                           <div className="flex items-center justify-between">
-                            <div className="font-medium">Goal: {step.goal}</div>
+                            <div className="font-medium">
+                              Goal: {step.goal}
+                            </div>
                             <button
                               onClick={() => startExploringStep(step.id)}
                               className="text-blue-500 hover:text-blue-600 flex items-center gap-1 text-xs"
