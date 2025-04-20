@@ -89,7 +89,8 @@ export default function Home() {
             .single();
         if (error) throw error;
 
-        setHeadings([data]);               // overwrite list with only the new chat
+        // setHeadings([data]);               // overwrite list with only the new chat
+        setHeadings((prev) => [data, ...prev]);
         setActiveChat(data);
         setShowChat(true);
         setShowFlowchart(true);
