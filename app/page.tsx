@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import type { FormState, ModelProvider, ModelConfig } from './types';
 import { MODEL_OPTIONS } from './types';
-import { StepBox } from './components/StepBox';
+import { StepBox } from '@/components/StepBox';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
