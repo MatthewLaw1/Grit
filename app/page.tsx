@@ -92,7 +92,7 @@ export default function LandingPage() {
             <motion.div
               key={thumbnail} // <-- use thumbnail as key, not idx
               whileHover={{ scale: 1.1 }}
-              className={`w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition ${active === idx ? "ring-4 ring-[var(--primary)]" : "opacity-60"}`}
+              className={`w-20 h-auto rounded-lg overflow-hidden cursor-pointer transition ${active === idx ? "ring-4 ring-[var(--primary)]" : "opacity-60"}`}
               onClick={() => setActive(idx)}
             >
               <img src={thumbnail} alt={`Thumbnail ${idx + 1}`} className="object-cover w-full h-full" />
