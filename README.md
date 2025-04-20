@@ -1,6 +1,6 @@
 # [Grit](https://devpost.com/software/grit-1uk8fb)
 
-### A Human/AI Collaboration framework
+### Git for LLM Reasoning
 > ### Submission for HackDavis 2025
 
 <img src="/public/dark-thumbnail.png" alt="DarkThumbnail">
@@ -65,14 +65,11 @@ npm run dev
 - **Multimodal Support:** Renders code blocks, LaTeX formulas, and inline diagrams in real time.  
 - **Persistent Context:** Every branch remembers where it came from and reconnects smoothly to the parent chain once you’re ready.
 
-<!-- ### System Architecture
-![SystemArch]() -->
 
-<!-- - Frontend: Next.js with TypeScript and Tailwind CSS
-- Backend: FastAPI service wrapping the Tree of Thought LLM implementation
-- APIs: 
-  - `/api/openai`: OpenAI integration
-  - `/api/anthropic`: Anthropic integration  
-  - `/api/tot`: Tree of Thought reasoning service -->
-
-<!-- The Tree of Thought implementation uses beam search to explore multiple reasoning paths and evaluates them to find the most promising solutions. -->
+### What's next for Grit
+- **Product Launch:** Launch our Product as an Embedded Tool in Educate AI, with a user base of 700,000 educators across the globe.
+- **Activation Extraction:** Integrate research‑grade techniques to surface latent activation patterns for an even deeper look under the hood.  
+- **Mini‑Course Generator:** Auto‑compile a series of related reasoning flows into a custom study plan.  
+- **Multi‑Model Support:** Let users pick from different reasoning styles (e.g., “concise,” “pedagogical,” “deep dive”) and compare outputs.  
+- **Mobile & Collaborative Modes:** Dedicated iOS/Android apps and shared reasoning sessions so teams can workshop complex problems together.  
+- **Learning Analytics:** Aggregate anonymized CoT paths to identify common stumbling blocks and recommend targeted resources.  
