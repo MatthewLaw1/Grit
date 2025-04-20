@@ -1,65 +1,61 @@
-"use client"
-import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase-client"
+"use client";
 
 export interface Heading {
-    id: number
-    title: string
-    subheading: string
+    id: number;
+    title: string;
+    subheading: string;
+    created_at: string;
 }
 
 interface HeadingsListProps {
-    onHeadingSelect: (h: Heading) => void
+    headings: Heading[];
+    selectedId?: number;
+    onHeadingSelect: (h: Heading) => void;
 }
 
-export default function HeadingsList({ onHeadingSelect }: HeadingsListProps) {
-    const [headings, setHeadings] = useState<Heading[]>([])
-    const [selectedId, setSelectedId] = useState<number | null>(null)
-
-    useEffect(() => {
-        async function load() {
-        let { data, error } = await supabase
-            .from<Heading>("chats")
-            .select("id, title, subheading")
-            .order("created_at", { ascending: false })
-
-        if (error) {
-            console.error("Error loading chats:", error)
-        } else {
-            setHeadings(data)
-        }
-        }
-        load()
-    }, [])
-
-    const select = (h: Heading) => {
-        setSelectedId(h.id)
-        onHeadingSelect(h)
-    }
-
+export default function HeadingsList({
+    headings,
+    selectedId,
+    onHeadingSelect,
+    }: HeadingsListProps) {
     return (
         <div className="space-y-2">
-        {headings.map((h) => (
+        {headings.map((h) => {
+            const isSelected = h.id === selectedId;
+            return (
             <div
-            key={h.id}
-            onClick={() => select(h)}
-            className={`
+                key={h.id}
+                onClick={() => onHeadingSelect(h)}
+                className={`
                 p-3 rounded-lg cursor-pointer transition
-                ${h.id === selectedId
-                ? "bg-[var(--secondary)] border border-[var(--primary)]"
-                : "bg-[var(--background)] border border-[var(--secondary)] hover:bg-[var(--foreground)]"
+                ${isSelected
+                    ? "bg-[var(--secondary)] border border-[var(--primary)] text-white"
+                    : "bg-white border border-[var(--secondary)] hover:bg-[var(--foreground)]"
                 }
-            `}
+                `}
             >
-            <div className="flex justify-between">
-                <span className="font-semibold text-[var(--primary)]">{h.title}</span>
-                <span className="text-xs text-[var(--primary)]">
-                {/* you could format created_at here */}
+                <div className="flex justify-between">
+                <span
+                    className={`font-semibold ${
+                    isSelected ? "text-white" : "text-[var(--primary)]"
+                    }`}
+                >
+                    {h.title}
                 </span>
+                <span className="text-xs text-[var(--secondary)]">
+                    {new Date(h.created_at).toLocaleDateString()}
+                </span>
+                </div>
+                <p className="text-sm">
+                {isSelected ? (
+                    <span className="text-white">{h.subheading}</span>
+                ) : (
+                    <span className="text-[var(--primary)]">{h.subheading}</span>
+                )}
+                </p>
             </div>
-            <p className="text-sm text-[var(--primary)]">{h.subheading}</p>
-            </div>
-        ))}
+            );
+        })}
         </div>
-    )
+    );
 }

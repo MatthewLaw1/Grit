@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import './globals.css';
 
 export default function LandingPage() {
     const thumbnails: number[] = [1, 2, 3, 4];
@@ -38,10 +38,10 @@ export default function LandingPage() {
             </nav>
 
             <div className="flex items-center space-x-3">
-                <Button size="sm" className="bg-[var(--secondary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
+                <Button size="sm" variant="primary">
                 Log In
                 </Button>
-                <Button size="sm" className="bg-[var(--primary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
+                <Button size="sm" variant="secondary">
                 Sign Up
                 </Button>
             </div>

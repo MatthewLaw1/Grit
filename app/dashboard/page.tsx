@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import HeadingsList, { Heading } from "@/components/headings-list";
 import ChatPanel from "@/components/chat-panel";
 import FlowchartPanel from "@/components/flowchart-view";
-import { Search, Plus, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+    Search,
+    Plus,
+    ChevronsLeft,
+    ChevronsRight,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase-client";
 
 interface Message {
@@ -13,18 +18,18 @@ interface Message {
     sender: "user" | "bot";
     content: string;
     timestamp: string;
-    parentStepId?: string;
+    parent_step_id?: string;
 }
 
 interface Step {
+    id: string;
     goal: string;
     reasoning: string;
     conclusion: string;
-    id: string;
     parentId?: string;
 }
 
-// Helper function to parse messages
+// your JSON parser
 const parseMessage = (
     msg: Message
     ): { content: string; steps?: Step[]; parentStepId?: string } => {
@@ -32,12 +37,12 @@ const parseMessage = (
         const parsed = JSON.parse(msg.content);
         if (msg.sender === "user") {
         return {
-            content: parsed.text || msg.content,
+            content: parsed.text ?? msg.content,
             parentStepId: parsed.parentStepId,
         };
         } else {
         return {
-            content: parsed.finalAnswer || msg.content,
+            content: parsed.finalAnswer ?? msg.content,
             steps: parsed.steps,
             parentStepId: parsed.parentStepId,
         };
@@ -49,118 +54,81 @@ const parseMessage = (
 
 export default function Home() {
     const [headingsCollapsed, setHeadingsCollapsed] = useState(false);
-    const [headingsKey, setHeadingsKey] = useState(0);
+
+    // — Chats & messages state —
+    const [headings, setHeadings] = useState<Heading[]>([]);
     const [activeChat, setActiveChat] = useState<Heading | null>(null);
-    const [showChat, setShowChat] = useState(false);
-    const [showFlowchart, setShowFlowchart] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
-    const [exploringStepId, setExploringStepId] = useState<string | undefined>();
+    const [showChat, setShowChat] = useState(false);
+    const [showFlowchart, setShowFlowchart] = useState(false);
+    const [exploringStepId, setExploringStepId] = useState<string>();
 
-    const loadMessages = async (chatId: number) => {
+    // 1) Fetch your existing chats on mount
+    useEffect(() => {
+        fetchHeadings();
+    }, []);
+
+    async function fetchHeadings() {
+        const { data, error } = await supabase
+        .from("chats")
+        .select("id, title, subheading, created_at")
+        .order("created_at", { ascending: false });
+        if (error) console.error("Failed to load chats:", error);
+        else setHeadings(data || []);
+    }
+
+    // 2) Create a new chat and immediately load its (empty) message history
+    async function createNewChat() {
         setLoading(true);
         try {
         const { data, error } = await supabase
-            .from("messages")
-            .select("id, sender, content, timestamp, parent_step_id")
-            .eq("chat_id", chatId)
-            .order("timestamp", { ascending: true });
-
+            .from("chats")
+            .insert({ title: "New Chat", subheading: "" })
+            .select("id, title, subheading, created_at")
+            .single();
         if (error) throw error;
-        setMessages(data || []);
-        } catch (error) {
-        console.error("Error loading messages:", error);
+
+        setHeadings([data]);               // overwrite list with only the new chat
+        setActiveChat(data);
+        setShowChat(true);
+        setShowFlowchart(true);
+
+        // now load messages (will be empty)
+        await loadMessages(data.id);
+        } catch (e) {
+        console.error("Could not create chat:", e);
         } finally {
         setLoading(false);
         }
-    };
+    }
 
-    const sendMessage = async (
-        chatId: number,
-        text: string,
-        parentStepId?: string,
-        parentStep?: Step
-    ) => {
+    // 3) Load the message history for a given chat
+    async function loadMessages(chatId: number) {
         setLoading(true);
-        try {
-        // Save user message
-        const { data: userData, error: userError } = await supabase
-            .from("messages")
-            .insert({
-            chat_id: chatId,
-            sender: "user",
-            content: JSON.stringify({
-                text,
-                parentStepId,
-            }),
-            })
-            .select("id, sender, content, timestamp")
-            .single();
-
-        if (userError) throw userError;
-        setMessages((prev) => [...prev, userData]);
-
-        // Get AI response with context about the step being explored
-        const aiResponse = await fetch("/api/openai", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-            prompt: text,
-            model: "gpt-4-0125-preview",
-            thoughtMode: "chain",
-            context: parentStepId
-                ? {
-                    type: "exploring_step",
-                    stepId: parentStepId,
-                    parentStep,
-                    originalMessages: messages
-                    .filter((m) => !parseMessage(m).parentStepId)
-                    .map((m) => parseMessage(m).content),
-                }
-                : undefined,
-            }),
-        });
-
-        const aiData = await aiResponse.json();
-        if (!aiResponse.ok) {
-            throw new Error(aiData.error || "Failed to get AI response");
-        }
-
-        // Save AI response
-        const { data: botData, error: botError } = await supabase
-            .from("messages")
-            .insert({
-            chat_id: chatId,
-            sender: "bot",
-            content: JSON.stringify({
-                ...aiData.response,
-                parentStepId,
-            }),
-            })
-            .select("id, sender, content, timestamp")
-            .single();
-
-        if (botError) throw botError;
-        setMessages((prev) => [...prev, botData]);
-        } catch (error) {
-        console.error("Error in chat sequence:", error);
-        } finally {
+        const { data, error } = await supabase
+        .from("messages")
+        .select("id, sender, content, timestamp, parent_step_id")
+        .eq("chat_id", chatId)
+        .order("timestamp", { ascending: true });
+        if (error) console.error("Message load error:", error);
+        else setMessages(data || []);
         setLoading(false);
-        }
-    };
+    }
 
-    const onHeadingSelect = async (h: Heading) => {
+    // 4) When you click an existing chat
+    async function onHeadingSelect(h: Heading) {
         setActiveChat(h);
         setShowChat(true);
         setShowFlowchart(true);
-        setExploringStepId(undefined); // Reset exploration state when changing chats
+        setExploringStepId(undefined);
+
+        // fetch its past messages
         await loadMessages(h.id);
 
-        // Set up realtime subscription
-        const channel = supabase.channel(`chat:${h.id}`);
-        channel
+        // subscribe to new ones
+        const channel = supabase
+        .channel(`chat:${h.id}`)
         .on(
             "postgres_changes" as any,
             {
@@ -170,83 +138,108 @@ export default function Home() {
             filter: `chat_id=eq.${h.id}`,
             },
             (payload) => {
-            const newMessage = payload.new as Message;
-            if (newMessage) {
-                setMessages((prev) => {
-                const exists = prev.some((msg) => msg.id === newMessage.id);
-                if (exists) return prev;
-                return [...prev, newMessage];
-                });
-            }
+            const m = payload.new as Message;
+            setMessages((prev) =>
+                prev.some((x) => x.id === m.id) ? prev : [...prev, m]
+            );
             }
         )
         .subscribe();
+        return () => void channel.unsubscribe();
+    }
 
-        return () => {
-        channel.unsubscribe();
-        };
-    };
+    // 5) Send + store a new user message, then get & store the AI reply
+    async function sendMessage(
+        chatId: number,
+        text: string,
+        parentStepId?: string
+    ) {
+        setLoading(true);
+        try {
+        // insert the user's message
+        const { data: u, error: ue } = await supabase
+            .from("messages")
+            .insert({
+            chat_id: chatId,
+            sender: "user",
+            content: JSON.stringify({ text, parentStepId }),
+            })
+            .select()
+            .single();
+        if (ue) throw ue;
+        setMessages((m) => [...m, u]);
 
-    const createNewChat = async () => {
-        const res = await fetch("/api/chats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "New Chat", subheading: "" }),
+        // call your OpenAI endpoint
+        const aiRes = await fetch("/api/openai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            prompt: text,
+            model: "gpt-4-0125-preview",
+            thoughtMode: "chain",
+            context: parentStepId
+                ? { type: "exploring_step", stepId: parentStepId }
+                : undefined,
+            }),
         });
-        if (!res.ok) throw new Error("Could not create chat");
-        const newChat: Heading = await res.json();
+        const aiJson = await aiRes.json();
+        if (!aiRes.ok) throw new Error(aiJson.error || "AI error");
 
-        // open the new chat immediately
-        setActiveChat(newChat);
-        setShowChat(true);
-        setShowFlowchart(true);
-
-        // refresh the headings list so it appears
-        setHeadingsKey((k) => k + 1);
-    };
-
-    const handleExploreStep = (stepId: string) => {
-        setExploringStepId(stepId);
-    };
-
-    const handleReturnToMain = () => {
-        setExploringStepId(undefined);
-    };
+        // insert the bot's reply
+        const { data: b, error: be } = await supabase
+            .from("messages")
+            .insert({
+            chat_id: chatId,
+            sender: "bot",
+            content: JSON.stringify({ ...aiJson.response, parentStepId }),
+            })
+            .select()
+            .single();
+        if (be) throw be;
+        setMessages((m) => [...m, b]);
+        } catch (e) {
+        console.error("Chat error:", e);
+        } finally {
+        setLoading(false);
+        }
+    }
 
     return (
-        <div className="flex h-screen bg-[var(--background)]">
+        <div className="flex h-screen bg-[var(--foreground)]">
         <Sidebar />
-        <div className="flex flex-1 overflow-hidden p-4 space-x-4 bg-[var(--foreground)]">
+
+        <div className="flex flex-1 overflow-hidden space-x-4 p-4">
             {/* Chats panel */}
             <div
             className={`
-                relative flex-shrink-0 flex flex-col transition-[width] duration-300 ease-in-out
+                relative flex-shrink-0 flex flex-col
                 ${headingsCollapsed ? "w-12" : "w-72"}
-                bg-[var(--background)] rounded-lg shadow
+                bg-white rounded-lg shadow transition-width duration-300
             `}
             >
-            <div className="flex items-center justify-between px-2 py-2 border-b border-[var(--secondary)]">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--secondary)]">
                 <button
                 onClick={() => setHeadingsCollapsed((c) => !c)}
-                className="p-1 hover:bg-[var(--secondary)] rounded"
+                className="hover:bg-[var(--foreground)] rounded"
                 >
                 {headingsCollapsed ? (
-                    <ChevronsRight size={20} />
+                    <ChevronsRight className="w-5 h-5" />
                 ) : (
-                    <ChevronsLeft size={20} />
+                    <ChevronsLeft className="w-5 h-5" />
                 )}
                 </button>
 
                 {!headingsCollapsed && (
                 <>
-                    <h2 className="flex-1 text-lg font-medium text-[var(--primary)]">
+                    <span className="text-md font-medium text-[var(--primary)]">
                     Chats
-                    </h2>
+                    </span>
                     <button
                     onClick={createNewChat}
-                    className="flex items-center space-x-1 px-2 py-1 text-sm font-medium text-[var(--primary)] rounded hover:bg-[var(--secondary)]"
+                    disabled={loading}
+                    className="flex items-center space-x-2 px-4 py-2 text-xs bg-[var(--secondary)] text-white rounded-md hover:bg-[var(--primary)] transition"
                     >
-                    <Plus size={16} /> <span>New Chat</span>
+                    <Plus size={16} /> <span>New</span>
                     </button>
                 </>
                 )}
@@ -255,21 +248,21 @@ export default function Home() {
             {!headingsCollapsed && (
                 <>
                 <div className="px-4 py-2 border-b border-[var(--secondary)]">
-                    <div className="relative">
-                    <Search
-                        size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--secondary)]"
-                    />
+                    <div className="flex items-center space-x-2">
                     <input
                         type="text"
                         placeholder="Search chats…"
-                        className="w-full pl-10 pr-3 py-2 bg-[var(--foreground)] rounded-md text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        className="w-full pl-3 py-2 bg-[var(--secondary)] text-white rounded-lg text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]"
                     />
+                    <button className="p-2 bg-[var(--secondary)] rounded-lg hover:bg-[var(--primary)] transition">
+                        <Search size={16} className="text-white" />
+                    </button>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 bg-[var(--background)]">
+                <div className="flex-1 overflow-y-auto p-4">
                     <HeadingsList
-                    key={headingsKey}
+                    headings={headings}
+                    selectedId={activeChat?.id}
                     onHeadingSelect={onHeadingSelect}
                     />
                 </div>
@@ -284,28 +277,26 @@ export default function Home() {
                 chatId={activeChat.id}
                 title={activeChat.title}
                 subheading={activeChat.subheading}
-                onClose={() => setShowChat(false)}
                 messages={messages}
                 loading={loading}
-                onSendMessage={(text, parentStepId) =>
-                    sendMessage(activeChat.id, text, parentStepId)
-                }
+                onSendMessage={(t, p) => sendMessage(activeChat.id, t, p)}
                 parseMessage={parseMessage}
-                onExploreStep={handleExploreStep}
-                onReturnToMain={handleReturnToMain}
+                onExploreStep={(stepId) => setExploringStepId(stepId)}
+                onReturnToMain={() => setExploringStepId(undefined)}
+                onClose={() => setShowChat(false)}
                 />
             )}
 
             {activeChat && showFlowchart && (
                 <FlowchartPanel
-                onClose={() => setShowFlowchart(false)}
                 messages={messages}
                 parseMessage={parseMessage}
                 focusedStepId={exploringStepId}
+                onClose={() => setShowFlowchart(false)}
                 />
             )}
 
-            {(!showChat || !activeChat) && (!showFlowchart || !activeChat) && (
+            {!activeChat && (
                 <div className="flex-1 flex items-center justify-center italic text-[var(--primary)]">
                 Choose which chat to view
                 </div>

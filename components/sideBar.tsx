@@ -7,7 +7,7 @@ export default function Sidebar() {
     const [activeItem, setActiveItem] = useState("chats");
 
     return (
-        <div className="w-[80px] bg-[#2A394C] flex flex-col items-center py-6">
+        <div className="w-[80px] bg-[var(--secondary)] flex flex-col items-center py-6">
             <div className="mb-4">
                 <div className="text-white text-3xl border-b-2 border-[var(--foreground)] pb-4">
                     <Link href="/#">
