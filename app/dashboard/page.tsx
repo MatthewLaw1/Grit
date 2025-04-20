@@ -1,31 +1,56 @@
 "use client"
 
 import { useState } from "react"
-import Sidebar from "@/components/sideBar"
+import Sidebar from "@/components/sidebar"
 import HeadingsList from "@/components/headings-list"
-import ChatView from "@/components/chat-view"
-import FlowchartView from "@/components/flowchart-view"
+import ChatPanel from "@/components/chat-panel"
+import FlowchartPanel from "@/components/flowchart-panel"
 import { Search } from "lucide-react"
 
 export default function Home() {
-    const [activeView, setActiveView] = useState<"chat" | "flowchart">("chat")
+    const [showHeadingsList, setShowHeadingsList] = useState(true)
+    const [showChat, setShowChat] = useState(true)
+    const [showFlowchart, setShowFlowchart] = useState(true)
+    const [activeHeading, setActiveHeading] = useState({
+        title: "Headings",
+        subheading: "subheadings",
+    })
 
     return (
-        <div className="flex h-screen bg-[#F0F0F0]">
+        <div className="flex h-screen bg-[#D1D8DE]">
         <Sidebar />
-        <div className="flex flex-1 overflow-hidden">
-            <div className="w-[350px] bg-[#D1D8DE] p-4 overflow-y-auto">
-            <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-                <input
-                type="text"
-                placeholder="Search"
-                className="w-full bg-[#F0F0F0] rounded-md py-2 pl-10 pr-4 text-sm"
+
+        <div className="flex flex-1 overflow-hidden p-4 space-x-4">
+            {showHeadingsList && (
+            <div className="w-[300px] bg-[#D1D8DE] overflow-y-auto">
+                <div className="relative mb-4">
+                <Search
+                    size={18}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                 />
+                <input
+                    type="text"
+                    placeholder="Search"
+                    className="w-full bg-[#F0F0F0] rounded-md py-2 pl-10 pr-4 text-sm"
+                />
+                </div>
+                <HeadingsList onHeadingSelect={setActiveHeading} />
             </div>
-            <HeadingsList onViewChange={setActiveView} activeView={activeView} />
+            )}
+
+            <div className="flex-1 flex space-x-4 overflow-hidden">
+            {showChat && (
+                <ChatPanel
+                title={activeHeading.title}
+                subheading={activeHeading.subheading}
+                onClose={() => setShowChat(false)}
+                />
+            )}
+
+            {showFlowchart && (
+                <FlowchartPanel onClose={() => setShowFlowchart(false)} />
+            )}
             </div>
-            <div className="flex-1 p-4 overflow-auto">{activeView === "chat" ? <ChatView /> : <FlowchartView />}</div>
         </div>
         </div>
     )

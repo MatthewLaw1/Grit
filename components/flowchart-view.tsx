@@ -1,10 +1,17 @@
 "use client"
 
+import { useEffect, useRef } from "react"
+import { X } from "lucide-react"
 
-export default function FlowchartView() {
+interface FlowchartPanelProps {
+    onClose: () => void
+}
+
+export default function FlowchartPanel({ onClose }: FlowchartPanelProps) {
+
     return (
-        <div className="h-full flex items-center justify-center bg-white rounded-lg p-4">
-        <div className="w-full h-full"></div>
+        <div className="flex-1 flex flex-col bg-[#A1B2C2] rounded-lg overflow-hidden">
+        
         </div>
     )
 }
