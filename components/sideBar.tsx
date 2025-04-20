@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MessageSquare, Archive } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 
 export default function Sidebar() {
@@ -9,12 +10,14 @@ export default function Sidebar() {
         <div className="w-[80px] bg-[#2A394C] flex flex-col items-center py-6">
             <div className="mb-4">
                 <div className="text-white text-3xl border-b-2 border-[var(--foreground)] pb-4">
-                    <Image 
-                        src="/icon.png"
-                        alt="Logo"
-                        width={45}
-                        height={45}
-                    />
+                    <Link href="/landing">
+                        <Image 
+                            src="/icon.png"
+                            alt="Logo"
+                            width={45}
+                            height={45}
+                        />
+                    </Link>
                 </div>
             </div>
             <div className="flex flex-col items-center space-y-8 pt-4">
