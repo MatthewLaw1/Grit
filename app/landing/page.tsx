@@ -105,11 +105,11 @@ export default function LandingPage() {
                 </motion.div>
             </section>
 
-            <section id="features" className="py-20 px-6 bg-white">
+            <section id="features" className="py-20 px-8 bg-white">
                 <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">
                     Features
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 px-20 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[1, 2, 3].map((i) => (
                     <motion.div
                         key={i}
@@ -131,7 +131,7 @@ export default function LandingPage() {
         <footer className="bg-gray-800 py-4">
             <div className="text-center text-gray-400">
                 <p>&copy; {new Date().getFullYear()} Grit. All rights reserved.</p>
-                <div className="flex justify-center space-x-4 mt-2">
+                <div className="flex justify-center space-x-6">
                     {["Privacy Policy", "Terms of Service", "Contact Us"].map((label) => (
                     <button
                         key={label}
