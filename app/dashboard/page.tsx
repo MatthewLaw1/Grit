@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import HeadingsList, { Heading } from "@/components/headings-list";
 import ChatPanel from "@/components/chat-panel";
-import FlowchartPanel from "@/components/flowchart-view";
+import FlowchartPanel from "@/components/flowchart-panel";
 import {
     Search,
     Plus,

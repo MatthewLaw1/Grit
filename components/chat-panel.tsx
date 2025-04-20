@@ -149,15 +149,15 @@ export default function ChatPanel({
             </button>
           )}
           <div>
-            <h2 className="font-bold text-xl text-[var(--primary)]">{title}</h2>
-            <p className="text-sm text-[var(--primary)]">
+            <h2 className="font-bold text-xl text-white">{title}</h2>
+            <p className="text-sm text-white">
               {exploringStepId ? "Exploring reasoning step" : subheading}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-[var(--primary)] p-1 rounded-full hover:bg-[var(--background)]"
+          className="text-white p-1 rounded-full hover:bg-[var(--background)]"
         >
           <X size={20} />
         </button>
