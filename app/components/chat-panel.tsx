@@ -1,57 +1,64 @@
-import React, { useRef, useEffect } from "react";
-import { Message } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { SendHorizontal, X } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ReasoningStep } from "./flowchart-view";
+import * as React from "react"
+import { Message } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { SendHorizontal, X } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+
+// Define ReasoningStep interface here since it's not exported from flowchart-panel
+interface ReasoningStep {
+  goal: string
+  reasoning: string
+  conclusion: string
+  id: string
+  parentId?: string
+}
 
 interface ChatPanelProps {
-  messages: Message[];
-  onSendMessage: (text: string, parentStepId?: string) => void;
-  isLoading?: boolean;
-  selectedStep?: ReasoningStep;
-  onExploreStep: (stepId: string) => void;
-  focusedStepId?: string;
-  onReturnToMain: () => void;
-  chatId: number;
-  title: string;
-  subheading: string;
-  onClose: () => void;
+  messages: Message[]
+  onSendMessage: (text: string, parentStepId?: string) => void
+  isLoading?: boolean
+  selectedStep?: ReasoningStep
+  onExploreStep: (stepId: string) => void
+  focusedStepId?: string
+  onReturnToMain: () => void
+  chatId: number
+  title: string
+  subheading: string
+  onClose: () => void
 }
 
 interface ParsedMessage {
-  content: string;
+  content: string
   steps?: {
-    goal: string;
-    reasoning: string;
-    conclusion: string;
-    id: string;
-  }[];
-  parentStepId?: string;
+    goal: string
+    reasoning: string
+    conclusion: string
+    id: string
+  }[]
+  parentStepId?: string
 }
 
 const parseMessage = (msg: Message): ParsedMessage => {
   try {
-    const parsed = JSON.parse(msg.content);
+    const parsed = JSON.parse(msg.content)
     if (msg.sender === "user") {
       return {
         content: parsed.text || msg.content,
         parentStepId: parsed.parentStepId,
-      };
+      }
     } else {
       return {
         content: parsed.finalAnswer || msg.content,
         steps: parsed.steps,
         parentStepId: parsed.parentStepId,
-      };
+      }
     }
   } catch {
-    return { content: msg.content };
+    return { content: msg.content }
   }
-};
+}
 
 export default function ChatPanel({
   messages,
@@ -65,39 +72,39 @@ export default function ChatPanel({
   subheading,
   onClose,
 }: ChatPanelProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [messages]);
+  }, [messages])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!textareaRef.current?.value.trim() || isLoading) return;
+    e.preventDefault()
+    if (!textareaRef.current?.value.trim() || isLoading) return
 
-    onSendMessage(textareaRef.current.value, focusedStepId);
-    textareaRef.current.value = "";
-  };
+    onSendMessage(textareaRef.current.value, focusedStepId)
+    textareaRef.current.value = ""
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+      e.preventDefault()
+      handleSubmit(e)
     }
-  };
+  }
 
   const renderExplorationContext = (parentStepId: string | undefined) => {
-    if (!parentStepId) return null;
+    if (!parentStepId) return null
 
     const parentStep = messages
       .map(parseMessage)
       .find((m) => m.steps?.some((s) => s.id === parentStepId))
-      ?.steps?.find((s) => s.id === parentStepId);
+      ?.steps?.find((s) => s.id === parentStepId)
 
-    if (!parentStep) return null;
+    if (!parentStep) return null
 
     return (
       <div className="mb-2 text-sm text-muted-foreground border-l-2 border-muted pl-2">
@@ -122,8 +129,8 @@ export default function ChatPanel({
           <strong>Conclusion:</strong> {parentStep.conclusion}
         </p>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <Card className="flex flex-col h-full">
@@ -137,12 +144,12 @@ export default function ChatPanel({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-auto">
         <div className="space-y-4">
           {messages.map((message, index) => {
-            const parsedMessage = parseMessage(message);
+            const parsedMessage = parseMessage(message)
             const isExplorationMessage =
-              parsedMessage.parentStepId === focusedStepId;
+              parsedMessage.parentStepId === focusedStepId
 
             // Only show messages that are either part of the main conversation (no parentStepId)
             // or are part of the current exploration
@@ -151,7 +158,7 @@ export default function ChatPanel({
               !isExplorationMessage &&
               parsedMessage.parentStepId
             ) {
-              return null;
+              return null
             }
 
             return (
@@ -200,7 +207,7 @@ export default function ChatPanel({
                     )}
                 </div>
               </div>
-            );
+            )
           })}
           {isLoading && (
             <div className="flex w-max max-w-[80%] flex-col gap-2 rounded-lg px-3 py-2 text-sm bg-muted">
@@ -209,7 +216,7 @@ export default function ChatPanel({
           )}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       <form onSubmit={handleSubmit} className="p-4 flex gap-2">
         <Textarea
@@ -224,7 +231,7 @@ export default function ChatPanel({
         />
         <Button
           type="submit"
-          size="icon"
+          size="lg"
           disabled={isLoading}
           className="h-[60px] w-[60px]"
         >
@@ -232,5 +239,5 @@ export default function ChatPanel({
         </Button>
       </form>
     </Card>
-  );
+  )
 }
