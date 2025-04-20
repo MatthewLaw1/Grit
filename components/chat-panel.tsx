@@ -1,98 +1,124 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase-client"
 import { Send, X } from "lucide-react"
 
+export interface Message {
+    id: number
+    sender: "user" | "bot"
+    content: string
+    timestamp: string
+}
+
 interface ChatPanelProps {
+    chatId: number
     title: string
     subheading: string
     onClose: () => void
 }
 
-interface Message {
-    id: string
-    content: string
-    sender: "user" | "bot"
-}
-
-export default function ChatPanel({ title, subheading, onClose }: ChatPanelProps) {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-        id: "1",
-        content: "Hello! How can I help you understand time series analysis today?",
-        sender: "bot",
-        },
-    ])
+export default function ChatPanel({
+    chatId,
+    title,
+    subheading,
+    onClose,
+    }: ChatPanelProps) {
+    const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState("")
+    const [loading, setLoading] = useState(false)
 
-    const handleSendMessage = () => {
-        if (!input.trim()) return
-
-        // Add user message
-        const userMessage: Message = {
-        id: Date.now().toString(),
-        content: input,
-        sender: "user",
+    useEffect(() => {
+        if (!chatId) {
+        setMessages([])
+        return
         }
+        setLoading(true)
+        supabase
+        .from("messages")
+        .select("id, sender, content, timestamp")
+        .eq("chat_id", chatId)
+        .order("timestamp", { ascending: true })
+        .then(({ data, error }) => {
+            if (error) console.error("Error loading messages:", error)
+            else setMessages(data || [])
+        })
+        .then(() => {
+            setLoading(false)
+        })
+    }, [chatId])
 
-        setMessages([...messages, userMessage])
+    const handleSend = () => {
+        const text = input.trim()
+        if (!text) return
         setInput("")
-
-        // Simulate bot response
-        setTimeout(() => {
-        const botMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            content:
-            "I understand your question about time series analysis. Would you like to learn more about stationarity or regression models?",
-            sender: "bot",
-        }
-        setMessages((prev) => [...prev, botMessage])
-        }, 1000)
+        supabase
+        .from("messages")
+        .insert({ chat_id: chatId, sender: "user", content: text })
+        .select("id, sender, content, timestamp")
+        .then(({ data, error }) => {
+            if (error) console.error("Send error:", error)
+            else setMessages((prev) => [...prev, ...(data || [])])
+        })
     }
 
     return (
         <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
+        {/* header */}
         <div className="flex justify-between items-center p-4 bg-[var(--secondary)]">
             <div>
             <h2 className="font-bold text-xl text-[var(--primary)]">{title}</h2>
             <p className="text-sm text-[var(--primary)]">{subheading}</p>
             </div>
-            <button onClick={onClose} className="text-[var(--primary)] hover:bg-[var(--background)] p-1 rounded-full">
+            <button
+            onClick={onClose}
+            className="text-[var(--primary)] p-1 rounded-full hover:bg-[var(--background)]"
+            >
             <X size={20} />
             </button>
         </div>
 
-        <div className="flex-1 bg-[var(--secondary)] p-4 overflow-y-auto">
-            <div className="space-y-4">
-            {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+        {/* messages list */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+            {loading ? (
+            <p className="text-[var(--primary)]">Loading…</p>
+            ) : messages.length === 0 ? (
+            <p className="italic text-[var(--primary)] text-center">
+                No messages yet
+            </p>
+            ) : (
+            messages.map((msg) => (
+                <div
+                key={msg.id}
+                className={`flex ${
+                    msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
+                >
                 <div
                     className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender === "user" ? "bg-[var(--primary)] text-[var(--foreground)]" : "bg-[var(--background)] text-[var(--primary)]"
+                    msg.sender === "user"
+                        ? "bg-[var(--primary)] text-[var(--foreground)]"
+                        : "bg-[var(--background)] text-[var(--primary)]"
                     }`}
                 >
-                    {message.content}
+                    {msg.content}
                 </div>
                 </div>
-            ))}
-            </div>
+            ))
+            )}
         </div>
 
+        {/* input */}
         <div className="p-4 bg-[var(--secondary)]">
             <div className="flex bg-[var(--background)] rounded-full overflow-hidden">
             <input
-                type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                placeholder="Type your message…"
                 className="flex-1 px-4 py-2 bg-transparent outline-none"
-                onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    handleSendMessage()
-                }
-                }}
             />
-            <button onClick={handleSendMessage} className="p-2 bg-[var(--secondary)] rounded-full m-1">
+            <button onClick={handleSend} className="p-2">
                 <Send size={20} className="text-[var(--primary)]" />
             </button>
             </div>
