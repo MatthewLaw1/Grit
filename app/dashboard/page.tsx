@@ -6,6 +6,36 @@ import HeadingsList, { Heading } from "@/components/headings-list";
 import ChatPanel from "@/components/chat-panel";
 import FlowchartPanel from "@/components/flowchart-view";
 import { Search, Plus, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { supabase } from "@/lib/supabase-client";
+
+interface Message {
+  id: number;
+  sender: "user" | "bot";
+  content: string;
+  timestamp: string;
+}
+
+interface Step {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+  id: string;
+  parentId?: string;
+}
+
+// Helper function to parse bot messages
+const parseMessage = (msg: Message): { content: string; steps?: Step[] } => {
+  if (msg.sender !== "bot") return { content: msg.content };
+  try {
+    const parsed = JSON.parse(msg.content);
+    return {
+      content: parsed.finalAnswer,
+      steps: parsed.steps,
+    };
+  } catch {
+    return { content: msg.content };
+  }
+};
 
 export default function Home() {
   const [headingsCollapsed, setHeadingsCollapsed] = useState(false);
@@ -13,11 +43,115 @@ export default function Home() {
   const [activeChat, setActiveChat] = useState<Heading | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [showFlowchart, setShowFlowchart] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const onHeadingSelect = (h: Heading) => {
+  const loadMessages = async (chatId: number) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id, sender, content, timestamp")
+        .eq("chat_id", chatId)
+        .order("timestamp", { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async (chatId: number, text: string) => {
+    setLoading(true);
+    try {
+      // Save user message
+      const { data: userData, error: userError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender: "user",
+          content: text,
+        })
+        .select("id, sender, content, timestamp")
+        .single();
+
+      if (userError) throw userError;
+      setMessages((prev) => [...prev, userData]);
+
+      // Get AI response
+      const aiResponse = await fetch("/api/openai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: text,
+          model: "gpt-4-0125-preview",
+          thoughtMode: "chain",
+        }),
+      });
+
+      const aiData = await aiResponse.json();
+      if (!aiResponse.ok) {
+        throw new Error(aiData.error || "Failed to get AI response");
+      }
+
+      // Save AI response
+      const { data: botData, error: botError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender: "bot",
+          content: JSON.stringify(aiData.response),
+        })
+        .select("id, sender, content, timestamp")
+        .single();
+
+      if (botError) throw botError;
+      setMessages((prev) => [...prev, botData]);
+    } catch (error) {
+      console.error("Error in chat sequence:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onHeadingSelect = async (h: Heading) => {
     setActiveChat(h);
     setShowChat(true);
     setShowFlowchart(true);
+    await loadMessages(h.id);
+
+    // Set up realtime subscription
+    const channel = supabase.channel(`chat:${h.id}`);
+    channel
+      .on(
+        "postgres_changes" as any,
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${h.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          if (newMessage) {
+            setMessages((prev) => {
+              const exists = prev.some((msg) => msg.id === newMessage.id);
+              if (exists) return prev;
+              return [...prev, newMessage];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   };
 
   const createNewChat = async () => {
@@ -112,11 +246,19 @@ export default function Home() {
               title={activeChat.title}
               subheading={activeChat.subheading}
               onClose={() => setShowChat(false)}
+              messages={messages}
+              loading={loading}
+              onSendMessage={(text) => sendMessage(activeChat.id, text)}
+              parseMessage={parseMessage}
             />
           )}
 
           {activeChat && showFlowchart && (
-            <FlowchartPanel onClose={() => setShowFlowchart(false)} />
+            <FlowchartPanel
+              onClose={() => setShowFlowchart(false)}
+              messages={messages}
+              parseMessage={parseMessage}
+            />
           )}
 
           {(!showChat || !activeChat) && (!showFlowchart || !activeChat) && (
