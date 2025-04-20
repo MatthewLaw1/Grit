@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import type { FormState, ModelProvider, ModelConfig } from './types';
+import type { FormState, ModelProvider, ModelConfig, ReasoningStep } from './types';
 import { MODEL_OPTIONS } from './types';
 import { StepBox } from './components/StepBox';
+import { TreeStepBox } from './components/TreeStepBox';
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
@@ -12,7 +13,8 @@ export default function Home() {
     error: null,
     isLoading: false,
     provider: 'anthropic',
-    model: 'claude-3-sonnet-20240229'
+    model: 'claude-3-sonnet-20240229',
+    thoughtMode: 'chain'
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -21,14 +23,16 @@ export default function Home() {
     setFormState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      const response = await fetch(`/api/${formState.provider}`, {
+      const endpoint = formState.thoughtMode === 'tree' ? '/api/tot' : `/api/${formState.provider}`;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           prompt: formState.prompt,
-          model: formState.model
+          model: formState.model,
+          thoughtMode: formState.thoughtMode
         }),
       });
 
@@ -67,7 +71,7 @@ export default function Home() {
         <h1 className="text-3xl font-bold mb-8">AI Model Integration</h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 items-end">
             <div className="flex-1">
               <label htmlFor="provider" className="block text-sm font-medium mb-2">
                 Provider
@@ -99,6 +103,36 @@ export default function Home() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-2">
+                Reasoning Mode
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'chain' }))}
+                  className={`flex-1 p-2 rounded-md border ${
+                    formState.thoughtMode === 'chain'
+                      ? 'bg-primary text-white border-primary'
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Chain of Thought
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'tree' }))}
+                  className={`flex-1 p-2 rounded-md border ${
+                    formState.thoughtMode === 'tree'
+                      ? 'bg-primary text-white border-primary'
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Tree of Thought
+                </button>
+              </div>
             </div>
           </div>
 
@@ -134,15 +168,26 @@ export default function Home() {
           <div className="mt-8 space-y-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-2xl font-bold text-primary">Chain of Thought Process</h2>
+                <h2 className="text-2xl font-bold text-primary">
+                  {formState.thoughtMode === 'chain' ? 'Chain' : 'Tree'} of Thought Process
+                </h2>
                 <div className="text-sm px-2 py-1 bg-primary/10 rounded-full text-primary">
                   {formState.response.steps.length} Steps
                 </div>
               </div>
               <div className="space-y-8">
-                {formState.response.steps.map((step, index) => (
-                  <StepBox key={index} step={step} index={index} />
-                ))}
+                {formState.thoughtMode === 'chain' ? (
+                  formState.response.steps.map((step, index) => (
+                    <StepBox key={index} step={step} index={index} />
+                  ))
+                ) : (
+                  // For tree mode, only render top-level steps (those without parents)
+                  formState.response.steps
+                    .filter((step: ReasoningStep) => !step.parentId)
+                    .map((step, index) => (
+                      <TreeStepBox key={step.id} step={step} index={index} />
+                    ))
+                )}
               </div>
             </div>
             

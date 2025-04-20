@@ -19,11 +19,23 @@ export interface ReasoningStep {
   goal: string;
   reasoning: string;
   conclusion: string;
+  children?: ReasoningStep[]; // For tree structure
+  parentId?: string; // For tracking relationships
+  id: string; // Unique identifier
 }
 
-export interface ChainOfThoughtResponse {
+export interface ThoughtResponse {
   steps: ReasoningStep[];
   finalAnswer: string;
+  mode: 'chain' | 'tree'; // Toggle between chain and tree modes
+}
+
+export interface ChainOfThoughtResponse extends ThoughtResponse {
+  mode: 'chain';
+}
+
+export interface TreeOfThoughtResponse extends ThoughtResponse {
+  mode: 'tree';
 }
 
 export interface AnthropicResponse {
@@ -36,9 +48,10 @@ export interface AnthropicError {
 
 export interface FormState {
   prompt: string;
-  response: ChainOfThoughtResponse | null;
+  response: ThoughtResponse | null;
   error: string | null;
   isLoading: boolean;
   provider: ModelProvider;
   model: string;
+  thoughtMode: 'chain' | 'tree';
 }
