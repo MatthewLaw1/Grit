@@ -101,7 +101,7 @@ export default function ChatPanel({
           {exploringStepId && (
             <button
               onClick={stopExplore}
-              className="p-1 text-white hover:bg-[var(--background)] rounded"
+              className="p-1 text-white hover:bg-[var(--primary)] rounded"
             >
               <ArrowLeft size={18} />
             </button>
