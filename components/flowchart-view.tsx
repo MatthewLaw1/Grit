@@ -1,89 +1,105 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { Markmap } from "markmap-view";
-import { transformer } from "@/lib/markmap";
-import { Toolbar } from "markmap-toolbar";
-import "markmap-toolbar/dist/style.css";
+import { Transformer } from "markmap-lib";
+import { X } from "lucide-react";
+import { Message } from "./chat-panel";
 
 interface FlowchartPanelProps {
-    onClose: () => void;
+  onClose: () => void;
+  messages: Message[];
+  parseMessage: (msg: Message) => { content: string; steps?: Step[] };
 }
 
-const initValue = `# Flowchart
-    - Topic 1
-        - Subtopic A
-        - Subtopic B
-    - Topic 2
-        - Subtopic X
-        - Subtopic Y
-`;
+interface Step {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+  id: string;
+  parentId?: string;
+}
 
-function renderToolbar(mm: Markmap, wrapper: HTMLElement) {
-    while (wrapper?.firstChild) wrapper.firstChild.remove();
-    if (mm && wrapper) {
-        const toolbar = new Toolbar();
-        toolbar.attach(mm);
-        toolbar.setItems(Toolbar.defaultItems);
-        wrapper.append(toolbar.render());
+const transformer = new Transformer();
+
+export default function FlowchartPanel({
+  onClose,
+  messages,
+  parseMessage,
+}: FlowchartPanelProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const mmRef = useRef<Markmap | null>(null);
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+
+    // Initialize Markmap if not already done
+    if (!mmRef.current) {
+      mmRef.current = Markmap.create(svgRef.current);
     }
+
+    // Convert messages to markdown structure
+    const markdown = generateMarkdown(messages, parseMessage);
+
+    // Transform markdown to markmap data
+    const { root } = transformer.transform(markdown);
+
+    // Render the markmap
+    mmRef.current.setData(root);
+    mmRef.current.fit();
+  }, [messages]);
+
+  return (
+    <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
+      <div className="flex justify-between items-center p-4 bg-[var(--secondary)]">
+        <h2 className="font-bold text-xl text-[var(--primary)]">
+          Thought Process Visualization
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-[var(--primary)] p-1 rounded-full hover:bg-[var(--background)]"
+        >
+          <X size={20} />
+        </button>
+      </div>
+      <div className="flex-1 overflow-hidden bg-white">
+        <svg
+          ref={svgRef}
+          className="w-full h-full"
+          style={{
+            backgroundColor: "var(--background)",
+            color: "var(--primary)",
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
-export default function FlowchartPanel({ onClose }: FlowchartPanelProps) {
-    const [value, setValue] = useState(initValue);
-    const refSvg = useRef<SVGSVGElement>(null);
-    const refMm = useRef<Markmap>();
-    const refToolbar = useRef<HTMLDivElement>(null);
+function generateMarkdown(
+  messages: Message[],
+  parseMessage: (msg: Message) => { content: string; steps?: Step[] }
+): string {
+  let markdown = "# Conversation Flow\n";
 
-    useEffect(() => {
-        if (refMm.current || !refSvg.current) return;
-        const mm = Markmap.create(refSvg.current);
-        refMm.current = mm;
-        if (refToolbar.current) {
-        renderToolbar(mm, refToolbar.current);
-        }
-    }, [refSvg.current]);
+  messages.forEach((msg, index) => {
+    const parsed = parseMessage(msg);
 
-    useEffect(() => {
-        const mm = refMm.current;
-        if (!mm) return;
-        const { root } = transformer.transform(value);
-        mm.setData(root);
-        mm.fit();
-    }, [refMm.current, value]);
+    if (msg.sender === "user") {
+      markdown += `\n## User Message ${index + 1}\n`;
+      markdown += `- ${parsed.content}\n`;
+    } else if (msg.sender === "bot" && parsed.steps) {
+      markdown += `\n## AI Response ${index + 1}\n`;
+      markdown += `- Final Answer: ${parsed.content}\n`;
+      markdown += `- Reasoning Process\n`;
 
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setValue(e.target.value);
-    };
+      parsed.steps.forEach((step) => {
+        markdown += `  - Goal: ${step.goal}\n`;
+        markdown += `    - Reasoning: ${step.reasoning}\n`;
+        markdown += `    - Conclusion: ${step.conclusion}\n`;
+      });
+    }
+  });
 
-    return (
-        <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
-        <div className="flex justify-between items-center p-4">
-            <h2 className="font-bold text-xl text-[var(--primary)]">Flowchart</h2>
-            <button
-            onClick={onClose}
-            className="text-[var(--primary)] p-1 rounded-full hover:bg-[var(--foreground)]"
-            >
-            <X size={20} />
-            </button>
-        </div>
-
-        <div className="flex-1 flex bg-[var(--background)] overflow-hidden">
-            <div className="w-1/3 p-4 border-r border-[var(--secondary)]">
-            <textarea
-                value={value}
-                onChange={handleChange}
-                className="w-full h-full p-4 bg-[var(--foreground)] rounded-lg border border-[var(--secondary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                placeholder="Enter markdown here..."
-            />
-            </div>
-
-            <div className="flex-1 relative">
-            <svg ref={refSvg} className="w-full h-full" />
-            <div ref={refToolbar} className="absolute bottom-4 right-4" />
-            </div>
-        </div>
-        </div>
-    );
+  return markdown;
 }

@@ -1,12 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase-client";
+import { useState } from "react";
 import { Send, X } from "lucide-react";
-import {
-  RealtimeChannel,
-  RealtimePostgresChangesPayload,
-} from "@supabase/supabase-js";
 
 interface Step {
   goal: string;
@@ -16,11 +11,6 @@ interface Step {
   parentId?: string;
 }
 
-interface AIResponse {
-  steps: Step[];
-  finalAnswer: string;
-}
-
 export interface Message {
   id: number;
   sender: "user" | "bot";
@@ -28,25 +18,15 @@ export interface Message {
   timestamp: string;
 }
 
-// Helper function to parse bot messages
-const parseMessage = (msg: Message): { content: string; steps?: Step[] } => {
-  if (msg.sender !== "bot") return { content: msg.content };
-  try {
-    const parsed = JSON.parse(msg.content);
-    return {
-      content: parsed.finalAnswer,
-      steps: parsed.steps,
-    };
-  } catch {
-    return { content: msg.content };
-  }
-};
-
 interface ChatPanelProps {
   chatId: number;
   title: string;
   subheading: string;
   onClose: () => void;
+  messages: Message[];
+  loading: boolean;
+  onSendMessage: (text: string) => void;
+  parseMessage: (msg: Message) => { content: string; steps?: Step[] };
 }
 
 export default function ChatPanel({
@@ -54,144 +34,18 @@ export default function ChatPanel({
   title,
   subheading,
   onClose,
+  messages,
+  loading,
+  onSendMessage,
+  parseMessage,
 }: ChatPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!chatId) {
-      setMessages([]);
-      return;
-    }
-
-    const loadMessages = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("messages")
-          .select("id, sender, content, timestamp, steps")
-          .eq("chat_id", chatId)
-          .order("timestamp", { ascending: true });
-
-        if (error) {
-          throw error;
-        }
-
-        setMessages(data || []);
-      } catch (error) {
-        console.error("Error loading messages:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMessages();
-
-    // Set up real-time subscription
-    const channel = supabase.channel(`chat:${chatId}`);
-
-    channel
-      .on(
-        "postgres_changes" as any, // Type assertion needed due to Supabase typing issue
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        (payload: RealtimePostgresChangesPayload<Message>) => {
-          const newMessage = payload.new as Message;
-          if (newMessage) {
-            setMessages((prev) => {
-              // Check if message already exists
-              const exists = prev.some((msg) => msg.id === newMessage.id);
-              if (exists) return prev;
-              return [...prev, newMessage];
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [chatId]);
-
-  const handleSend = async () => {
+  const handleSend = () => {
     const text = input.trim();
     if (!text) return;
     setInput("");
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({ chat_id: chatId, sender: "user", content: text })
-        .select("id, sender, content, timestamp")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      setMessages((prev) => [...prev, data]);
-
-      // Now send to AI for response
-      console.log("Sending request to AI endpoint:", {
-        prompt: text,
-        model: "gpt-4-0125-preview", // Using a specific model
-        thoughtMode: "chain",
-      });
-
-      const aiResponse = await fetch("/api/openai", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: text,
-          model: "gpt-4-0125-preview",
-          thoughtMode: "chain",
-        }),
-      });
-
-      const aiData = await aiResponse.json();
-      console.log("Received AI response:", aiData);
-
-      if (!aiResponse.ok) {
-        throw new Error(aiData.error || "Failed to get AI response");
-      }
-
-      // The response contains a parsed JSON object with steps and finalAnswer
-      console.log("AI response structure:", {
-        steps: aiData.response.steps,
-        finalAnswer: aiData.response.finalAnswer,
-      });
-
-      // Insert AI response into Supabase
-      const { data: botData, error: botError } = await supabase
-        .from("messages")
-        .insert({
-          chat_id: chatId,
-          sender: "bot",
-          content: JSON.stringify(aiData.response),
-        })
-        .select("id, sender, content, timestamp")
-        .single();
-
-      if (botError) {
-        throw botError;
-      }
-
-      console.log("Saved bot response to Supabase:", botData);
-      setMessages((prev) => [...prev, botData]);
-    } catch (error) {
-      console.error("Error in chat sequence:", error);
-    } finally {
-      setLoading(false);
-    }
+    onSendMessage(text);
   };
 
   return (
