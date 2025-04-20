@@ -1,56 +1,64 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import type { FormState, ModelProvider, ModelConfig, ReasoningStep } from './types';
-import { MODEL_OPTIONS } from './types';
-import { StepBox } from '@/components/StepBox';
-import { TreeStepBox } from '@/components/TreeStepBox';
+import { useState, FormEvent } from "react";
+import type {
+  FormState,
+  ModelProvider,
+  ModelConfig,
+  ReasoningStep,
+} from "./types";
+import { MODEL_OPTIONS } from "./types";
+import { StepBox } from "@/components/StepBox";
+import { TreeStepBox } from "@/components/TreeStepBox";
 
 export default function Home() {
   const [formState, setFormState] = useState<FormState>({
-    prompt: '',
+    prompt: "",
     response: null,
     error: null,
     isLoading: false,
-    provider: 'anthropic',
-    model: 'claude-3-sonnet-20240229',
-    thoughtMode: 'chain'
+    provider: "anthropic",
+    model: "claude-3-sonnet-20240229",
+    thoughtMode: "chain",
   });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    setFormState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+
+    setFormState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
-      const endpoint = formState.thoughtMode === 'tree' ? '/api/tot' : `/api/${formState.provider}`;
+      const endpoint =
+        formState.thoughtMode === "tree"
+          ? "/api/tot"
+          : `/api/${formState.provider}`;
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           prompt: formState.prompt,
           model: formState.model,
-          thoughtMode: formState.thoughtMode
+          thoughtMode: formState.thoughtMode,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response');
+        throw new Error(data.error || "Failed to get response");
       }
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         response: data.response,
         isLoading: false,
       }));
     } catch (error) {
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'An error occurred',
+        error: error instanceof Error ? error.message : "An error occurred",
         isLoading: false,
       }));
     }
@@ -58,10 +66,10 @@ export default function Home() {
 
   const handleProviderChange = (provider: ModelProvider) => {
     const defaultModel = MODEL_OPTIONS[provider][0].value;
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       provider,
-      model: defaultModel
+      model: defaultModel,
     }));
   };
 
@@ -69,24 +77,29 @@ export default function Home() {
     <main className="min-h-screen p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">AI Model Integration</h1>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-4 mb-4 items-end">
             <div className="flex-1">
-              <label htmlFor="provider" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="provider"
+                className="block text-sm font-medium mb-2"
+              >
                 Provider
               </label>
               <select
                 id="provider"
                 value={formState.provider}
-                onChange={(e) => handleProviderChange(e.target.value as ModelProvider)}
+                onChange={(e) =>
+                  handleProviderChange(e.target.value as ModelProvider)
+                }
                 className="w-full p-2 border rounded-md"
               >
                 <option value="anthropic">Anthropic</option>
                 <option value="openai">OpenAI</option>
               </select>
             </div>
-            
+
             <div className="flex-1">
               <label htmlFor="model" className="block text-sm font-medium mb-2">
                 Model
@@ -94,10 +107,12 @@ export default function Home() {
               <select
                 id="model"
                 value={formState.model}
-                onChange={(e) => setFormState(prev => ({ ...prev, model: e.target.value }))}
+                onChange={(e) =>
+                  setFormState((prev) => ({ ...prev, model: e.target.value }))
+                }
                 className="w-full p-2 border rounded-md"
               >
-                {MODEL_OPTIONS[formState.provider].map(option => (
+                {MODEL_OPTIONS[formState.provider].map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -112,22 +127,26 @@ export default function Home() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'chain' }))}
+                  onClick={() =>
+                    setFormState((prev) => ({ ...prev, thoughtMode: "chain" }))
+                  }
                   className={`flex-1 p-2 rounded-md border ${
-                    formState.thoughtMode === 'chain'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-300 hover:bg-gray-50'
+                    formState.thoughtMode === "chain"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   Chain of Thought
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormState(prev => ({ ...prev, thoughtMode: 'tree' }))}
+                  onClick={() =>
+                    setFormState((prev) => ({ ...prev, thoughtMode: "tree" }))
+                  }
                   className={`flex-1 p-2 rounded-md border ${
-                    formState.thoughtMode === 'tree'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-300 hover:bg-gray-50'
+                    formState.thoughtMode === "tree"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   Tree of Thought
@@ -143,18 +162,20 @@ export default function Home() {
             <textarea
               id="prompt"
               value={formState.prompt}
-              onChange={(e) => setFormState(prev => ({ ...prev, prompt: e.target.value }))}
+              onChange={(e) =>
+                setFormState((prev) => ({ ...prev, prompt: e.target.value }))
+              }
               className="w-full p-2 border rounded-md min-h-[100px]"
               placeholder="Type your prompt here..."
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={formState.isLoading || !formState.prompt}
             className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base"
           >
-            {formState.isLoading ? 'Processing...' : 'Submit'}
+            {formState.isLoading ? "Processing..." : "Submit"}
           </button>
         </form>
 
@@ -169,48 +190,59 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-blue-600">
-                  {formState.thoughtMode === 'chain' ? 'Chain' : 'Tree'} of Thought Process
+                  {formState.thoughtMode === "chain" ? "Chain" : "Tree"} of
+                  Thought Process
                 </h2>
                 <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
                   {formState.response.steps.length} Steps
                 </div>
               </div>
               <div className="space-y-8">
-                {formState.thoughtMode === 'chain' ? (
-                  formState.response.steps.map((step, index) => (
-                    <StepBox key={index} step={step} index={index} />
-                  ))
-                ) : (
-                  // For tree mode, only render top-level steps (those without parents)
-                  formState.response.steps
-                    .filter((step: ReasoningStep) => !step.parentId)
-                    .map((step, index) => (
-                      <TreeStepBox key={step.id} step={step} index={index} />
+                {formState.thoughtMode === "chain"
+                  ? formState.response.steps.map((step, index) => (
+                      <StepBox key={index} step={step} index={index} />
                     ))
-                )}
+                  : // For tree mode, only render top-level steps (those without parents)
+                    formState.response.steps
+                      .filter((step: ReasoningStep) => !step.parentId)
+                      .map((step, index) => (
+                        <TreeStepBox key={step.id} step={step} index={index} />
+                      ))}
               </div>
             </div>
-            
+
             <div className="relative">
               {/* Connector from last step to final answer */}
               <div className="absolute -top-8 left-5 w-0.5 h-8 bg-blue-300" />
-              
+
               <div className="border-t-2 border-blue-200 pt-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <h2 className="text-2xl font-bold text-blue-600">Final Answer</h2>
+                  <h2 className="text-2xl font-bold text-blue-600">
+                    Final Answer
+                  </h2>
                   <div className="text-sm px-2 py-1 bg-blue-100 rounded-full text-blue-600">
                     Result
                   </div>
                 </div>
                 <div className="bg-blue-50 p-6 border-2 border-blue-200 rounded-lg shadow-lg">
                   <div className="relative">
-                    <div className="absolute top-2 right-2 text-xs text-gray-500">Final Answer JSON</div>
+                    <div className="absolute top-2 right-2 text-xs text-gray-500">
+                      Final Answer JSON
+                    </div>
                     <div className="font-mono text-sm bg-gray-900 text-white p-4 pt-8 rounded-md overflow-x-auto mb-4">
-                      <pre>{JSON.stringify({ finalAnswer: formState.response.finalAnswer }, null, 2)}</pre>
+                      <pre>
+                        {JSON.stringify(
+                          { finalAnswer: formState.response.finalAnswer },
+                          null,
+                          2
+                        )}
+                      </pre>
                     </div>
                   </div>
                   <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
-                    <div className="whitespace-pre-wrap text-lg text-gray-800">{formState.response.finalAnswer}</div>
+                    <div className="whitespace-pre-wrap text-lg text-gray-800">
+                      {formState.response.finalAnswer}
+                    </div>
                   </div>
                 </div>
               </div>
