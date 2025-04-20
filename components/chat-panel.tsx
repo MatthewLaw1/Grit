@@ -42,7 +42,12 @@ export default function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [exploringStepId, setExploringStepId] = useState<string | null>(null);
-  const [selectedStep, setSelectedStep] = useState<{ id: string; goal: string; reasoning: string; conclusion: string } | null>(null);
+  const [selectedStep, setSelectedStep] = useState<{
+    id: string;
+    goal: string;
+    reasoning: string;
+    conclusion: string;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // auto‑scroll on new content
@@ -185,7 +190,9 @@ export default function ChatPanel({
                           key={s.id}
                           className="p-3 bg-[var(--foreground)] rounded-lg shadow-sm flex justify-between items-center"
                         >
-                          <span className="font-semibold text-sm">{s.goal}</span>
+                          <span className="font-semibold text-sm">
+                            {s.goal}
+                          </span>
                           <button
                             onClick={() => startExplore(s.id)}
                             className="inline-flex items-center text-[var(--primary)] text-xs font-medium"
