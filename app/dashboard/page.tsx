@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/components/sideBar";
 import HeadingsList, { Heading } from "@/components/headings-list";
 import ChatPanel from "@/components/chat-panel";
 import FlowchartPanel from "@/components/flowchart-view";
@@ -13,6 +13,7 @@ interface Message {
   sender: "user" | "bot";
   content: string;
   timestamp: string;
+  parentStepId?: string;
 }
 
 interface Step {
@@ -23,15 +24,24 @@ interface Step {
   parentId?: string;
 }
 
-// Helper function to parse bot messages
-const parseMessage = (msg: Message): { content: string; steps?: Step[] } => {
-  if (msg.sender !== "bot") return { content: msg.content };
+// Helper function to parse messages
+const parseMessage = (
+  msg: Message
+): { content: string; steps?: Step[]; parentStepId?: string } => {
   try {
     const parsed = JSON.parse(msg.content);
-    return {
-      content: parsed.finalAnswer,
-      steps: parsed.steps,
-    };
+    if (msg.sender === "user") {
+      return {
+        content: parsed.text || msg.content,
+        parentStepId: parsed.parentStepId,
+      };
+    } else {
+      return {
+        content: parsed.finalAnswer || msg.content,
+        steps: parsed.steps,
+        parentStepId: parsed.parentStepId,
+      };
+    }
   } catch {
     return { content: msg.content };
   }
@@ -45,13 +55,14 @@ export default function Home() {
   const [showFlowchart, setShowFlowchart] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exploringStepId, setExploringStepId] = useState<string | undefined>();
 
   const loadMessages = async (chatId: number) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("messages")
-        .select("id, sender, content, timestamp")
+        .select("id, sender, content, timestamp, parent_step_id")
         .eq("chat_id", chatId)
         .order("timestamp", { ascending: true });
 
@@ -64,7 +75,12 @@ export default function Home() {
     }
   };
 
-  const sendMessage = async (chatId: number, text: string) => {
+  const sendMessage = async (
+    chatId: number,
+    text: string,
+    parentStepId?: string,
+    parentStep?: Step
+  ) => {
     setLoading(true);
     try {
       // Save user message
@@ -73,7 +89,10 @@ export default function Home() {
         .insert({
           chat_id: chatId,
           sender: "user",
-          content: text,
+          content: JSON.stringify({
+            text,
+            parentStepId,
+          }),
         })
         .select("id, sender, content, timestamp")
         .single();
@@ -81,7 +100,7 @@ export default function Home() {
       if (userError) throw userError;
       setMessages((prev) => [...prev, userData]);
 
-      // Get AI response
+      // Get AI response with context about the step being explored
       const aiResponse = await fetch("/api/openai", {
         method: "POST",
         headers: {
@@ -91,6 +110,16 @@ export default function Home() {
           prompt: text,
           model: "gpt-4-0125-preview",
           thoughtMode: "chain",
+          context: parentStepId
+            ? {
+                type: "exploring_step",
+                stepId: parentStepId,
+                parentStep,
+                originalMessages: messages
+                  .filter((m) => !parseMessage(m).parentStepId)
+                  .map((m) => parseMessage(m).content),
+              }
+            : undefined,
         }),
       });
 
@@ -105,7 +134,10 @@ export default function Home() {
         .insert({
           chat_id: chatId,
           sender: "bot",
-          content: JSON.stringify(aiData.response),
+          content: JSON.stringify({
+            ...aiData.response,
+            parentStepId,
+          }),
         })
         .select("id, sender, content, timestamp")
         .single();
@@ -123,6 +155,7 @@ export default function Home() {
     setActiveChat(h);
     setShowChat(true);
     setShowFlowchart(true);
+    setExploringStepId(undefined);
     await loadMessages(h.id);
 
     // Set up realtime subscription
@@ -170,6 +203,14 @@ export default function Home() {
 
     // refresh the headings list so it appears
     setHeadingsKey((k) => k + 1);
+  };
+
+  const handleExploreStep = (stepId: string) => {
+    setExploringStepId(stepId);
+  };
+
+  const handleReturnToMain = () => {
+    setExploringStepId(undefined);
   };
 
   return (
@@ -248,8 +289,12 @@ export default function Home() {
               onClose={() => setShowChat(false)}
               messages={messages}
               loading={loading}
-              onSendMessage={(text) => sendMessage(activeChat.id, text)}
+              onSendMessage={(text, parentStepId) =>
+                sendMessage(activeChat.id, text, parentStepId)
+              }
               parseMessage={parseMessage}
+              onExploreStep={handleExploreStep}
+              onReturnToMain={handleReturnToMain}
             />
           )}
 
@@ -258,6 +303,7 @@ export default function Home() {
               onClose={() => setShowFlowchart(false)}
               messages={messages}
               parseMessage={parseMessage}
+              focusedStepId={exploringStepId}
             />
           )}
 
