@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.7.4",
     "lucide-react": "^0.501.0",
+    "markmap-common": "^0.18.9",
     "markmap-lib": "^0.18.11",
     "markmap-toolbar": "^0.18.10",
     "markmap-view": "^0.18.10",

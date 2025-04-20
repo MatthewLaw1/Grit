@@ -155,7 +155,7 @@ export default function Home() {
     setActiveChat(h);
     setShowChat(true);
     setShowFlowchart(true);
-    setExploringStepId(undefined);
+    setExploringStepId(undefined); // Reset exploration state when changing chats
     await loadMessages(h.id);
 
     // Set up realtime subscription
@@ -216,15 +216,14 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-[var(--background)]">
       <Sidebar />
-
       <div className="flex flex-1 overflow-hidden p-4 space-x-4 bg-[var(--foreground)]">
         {/* Chats panel */}
         <div
           className={`
-                relative flex-shrink-0 flex flex-col transition-[width] duration-300 ease-in-out
-                ${headingsCollapsed ? "w-12" : "w-72"}
-                bg-[var(--background)] rounded-lg shadow
-            `}
+            relative flex-shrink-0 flex flex-col transition-[width] duration-300 ease-in-out
+            ${headingsCollapsed ? "w-12" : "w-72"}
+            bg-[var(--background)] rounded-lg shadow
+          `}
         >
           <div className="flex items-center justify-between px-2 py-2 border-b border-[var(--secondary)]">
             <button
@@ -269,7 +268,6 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-2 bg-[var(--background)]">
-                {/* key changes force HeadingsList to re-fetch */}
                 <HeadingsList
                   key={headingsKey}
                   onHeadingSelect={onHeadingSelect}

@@ -1,59 +1,68 @@
 "use client"
 
-import { motion } from "framer-motion"
-import Image from 'next/image'
-import { useState } from 'react'
+import { motion } from "framer-motion";
+import Image from 'next/image';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, Plus, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export default function LandingPage() {
-    const thumbnails: number[] = [1, 2, 3, 4]
-    const [active, setActive] = useState<number>(0)
+    const thumbnails: number[] = [1, 2, 3, 4];
+    const [active, setActive] = useState<number>(0);
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
-        <header className="sticky top-0 z-50 bg-white bg-opacity-60 backdrop-blur flex justify-between items-center py-4 px-8 shadow-sm">
+        <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--secondary)]">
+        <header className="sticky top-0 z-50 backdrop-blur bg-[var(--foreground)] bg-opacity-80 shadow-md">
+            <div className="container mx-auto flex items-center justify-between py-4 px-6 lg:px-8">
             <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center space-x-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex items-center space-x-3"
             >
-            <Image src="/icon-black.png" alt="Logo" width={50} height={50} />
-            <span className="text-xl font-semibold text-[var(--primary)]">Grit</span>
+                <Image src="/icon-black.png" alt="Logo" width={48} height={48} />
+                <span className="text-2xl font-bold">Grit</span>
             </motion.div>
 
-            <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="space-x-3"
-            >
-            <button className="px-4 py-2 font-medium border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+            <nav className="hidden md:flex space-x-6">
+                {['Features', 'Pricing', 'Docs'].map((item) => (
+                <a
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    className="hover:text-[var(--primary)] transition"
+                >
+                    {item}
+                </a>
+                ))}
+            </nav>
+
+            <div className="flex items-center space-x-3">
+                <Button size="sm" className="bg-[var(--secondary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
                 Log In
-            </button>
-            <button className="px-4 py-2 font-medium bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--secondary)] hover:text-[var(--primary)] transition">
+                </Button>
+                <Button size="sm" className="bg-[var(--primary)] text-white hover:bg-[var(--background)] hover:text-[var(--primary)]">
                 Sign Up
-            </button>
-            </motion.div>
+                </Button>
+            </div>
+            </div>
         </header>
 
-        <main className="flex-1 space-y-24">
-            <motion.section
-            className="text-center pt-12 px-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+        <section className="relative flex-1 flex flex-col items-center justify-center text-center px-6 space-y-24 lg:px-0">
+            <div className="absolute inset-0" />
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="relative max-w-2xl"
             >
-            <Image
-                src="/icon-black.png"
-                alt="Grit Logo"
-                width={72}
-                height={72}
-                className="mx-auto mb-4"
-            />
-            <h1 className="text-5xl font-bold">Grit</h1>
-            <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
-                Explore the actual reasoning behind an AI’s response—step by step—
-                creating an interactive, exploratory learning experience.
+            <Image src="/icon-black.png" alt="Grit Logo" width={72} height={72} className="mx-auto mb-4" />
+            <h1 className="text-5xl lg:text-6xl font-extrabold text-[var(--secondary)]">
+                Reveal AI&apos;s Chain<br/>of Thought
+            </h1>
+            <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto">
+                Engage with each step of an AI&apos;s reasoning. Dive deeper, ask questions,
+                and learn interactively.
             </p>
             <div className="mt-6 flex justify-center space-x-4">
                 <button
@@ -69,9 +78,10 @@ export default function LandingPage() {
                     Learn More
                 </button>
             </div>
-            </motion.section>
+            </motion.div>
+        </section>
 
-            <section className="flex flex-col lg:flex-row items-center justify-center px-6 space-y-6 lg:space-y-0 lg:space-x-12">
+        <section className="flex flex-col lg:flex-row items-center justify-center px-6 space-y-6 lg:space-y-0 lg:space-x-12">
                 <div className="flex flex-col space-y-4">
                     {thumbnails.map((_, idx) => (
                         <motion.div
@@ -105,45 +115,38 @@ export default function LandingPage() {
                 </motion.div>
             </section>
 
-            <section id="features" className="py-20 px-8 bg-white">
-                <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">
-                    Features
-                </h2>
-                <div className="grid grid-cols-1 px-20 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {[1, 2, 3].map((i) => (
-                    <motion.div
-                        key={i}
-                        whileHover={{ y: -5, boxShadow: "0 15px 25px rgba(0,0,0,0.1)" }}
-                        className="p-6 bg-gray-50 rounded-2xl shadow transition-transform"
-                    >
-                        <div className="w-full h-40 bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] rounded-lg mb-4" />
-                        <h3 className="text-2xl font-semibold mb-2">Feature {i}</h3>
-                        <p className="text-gray-600">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                        </p>
-                    </motion.div>
-                    ))}
-                </div>
-            </section>
-        </main>
+        <section id="features" className="py-20 px-6 lg:px-20">
+            <h2 className="text-4xl font-bold text-center text-[var(--secondary)] mb-12">Features</h2>
+            <div className="container mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+                { title: 'Live Visualization', desc: 'Watch token-by-token reasoning unfold in real time.' },
+                { title: 'Deep Dive Branches', desc: 'Explore sub-thoughts without losing context.' },
+                { title: 'Multimodal Support', desc: 'Render code, math, diagrams seamlessly.' },
+            ].map((feature, i) => (
+                <Card key={i} className="hover:shadow-lg transition-shadow bg-[var(--foreground)]">
+                <CardHeader>
+                    <CardTitle className="text-xl text-[var(--primary)]">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-gray-600">{feature.desc}</p>
+                </CardContent>
+                </Card>
+            ))}
+            </div>
+        </section>
 
-        <footer className="bg-gray-800 py-4">
-            <div className="text-center text-gray-400">
-                <p>&copy; {new Date().getFullYear()} Grit. All rights reserved.</p>
-                <div className="flex justify-center space-x-6">
-                    {["Privacy Policy", "Terms of Service", "Contact Us"].map((label) => (
-                    <button
-                        key={label}
-                        onClick={() => alert(`${label} clicked`)}
-                        className="hover:text-white transition bg-transparent border-none cursor-pointer"
-                    >
-                        {label}
-                    </button>
-                    ))}
-                </div>
+        <footer className="bg-[var(--secondary)] text-gray-200 py-6">
+            <div className="container mx-auto flex flex-col md:flex-row items-center justify-between px-6 lg:px-20">
+            <span>&copy; {new Date().getFullYear()} Grit. All rights reserved.</span>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+                {['Privacy', 'Terms', 'Contact'].map((item) => (
+                <a key={item} href="#" className="hover:text-white transition">
+                    {item}
+                </a>
+                ))}
+            </div>
             </div>
         </footer>
         </div>
-    )
+    );
 }

@@ -61,7 +61,9 @@ export default function FlowchartPanel({
     <div className="flex-1 flex flex-col bg-[var(--secondary)] rounded-lg overflow-hidden">
       <div className="flex justify-between items-center p-4 bg-[var(--secondary)]">
         <h2 className="font-bold text-xl text-[var(--primary)]">
-          {focusedStepId ? "Exploring Step" : "Thought Process Visualization"}
+          {focusedStepId
+            ? "Exploring Reasoning Step"
+            : "Thought Process Visualization"}
         </h2>
         <button
           onClick={onClose}
@@ -89,7 +91,7 @@ function generateMarkdown(
   parseMessage: (msg: Message) => ParsedMessage,
   focusedStepId?: string
 ): string {
-  // If we're focusing on a specific step
+  // If focusing on a specific step
   if (focusedStepId) {
     let markdown = "# Exploring Reasoning Step\n";
 
@@ -136,11 +138,11 @@ function generateMarkdown(
               markdown += `- Question: ${currentUserQuestion}\n`;
               markdown += `  - Answer: ${currentAiResponse.content}\n`;
               if (currentAiResponse.steps) {
-                markdown += `  - Analysis\n`;
+                markdown += `    - Further Analysis\n`;
                 currentAiResponse.steps.forEach((expStep) => {
-                  markdown += `    - ${expStep.goal}\n`;
-                  markdown += `      - ${expStep.reasoning}\n`;
-                  markdown += `      - Concluded: ${expStep.conclusion}\n`;
+                  markdown += `      - Sub-Goal: ${expStep.goal}\n`;
+                  markdown += `        - Sub-Reasoning: ${expStep.reasoning}\n`;
+                  markdown += `        - Sub-Conclusion: ${expStep.conclusion}\n`;
                 });
               }
               currentUserQuestion = "";
@@ -157,25 +159,19 @@ function generateMarkdown(
   // Default full visualization if no step is focused or step wasn't found
   let markdown = "# Conversation Flow\n";
 
-  // First, process main conversation
-  const mainMessages = messages.filter((msg) => {
-    const parsed = parseMessage(msg);
-    return !parsed.parentStepId;
-  });
-
-  // Then, group exploration messages by their parent step
-  const explorations = new Map<string, Message[]>();
+  // First, organize messages by their parent-child relationships
+  const messageTree = new Map<string | undefined, Message[]>();
   messages.forEach((msg) => {
     const parsed = parseMessage(msg);
-    if (parsed.parentStepId) {
-      if (!explorations.has(parsed.parentStepId)) {
-        explorations.set(parsed.parentStepId, []);
-      }
-      explorations.get(parsed.parentStepId)?.push(msg);
+    const parentId = parsed.parentStepId;
+    if (!messageTree.has(parentId)) {
+      messageTree.set(parentId, []);
     }
+    messageTree.get(parentId)?.push(msg);
   });
 
-  // Generate markdown for main conversation
+  // Process main conversation (messages without parent)
+  const mainMessages = messageTree.get(undefined) || [];
   mainMessages.forEach((msg, index) => {
     const parsed = parseMessage(msg);
 
@@ -192,14 +188,14 @@ function generateMarkdown(
         markdown += `    - Reasoning: ${step.reasoning}\n`;
         markdown += `    - Conclusion: ${step.conclusion}\n`;
 
-        // Add exploration branch if it exists
-        const exploration = explorations.get(step.id);
-        if (exploration) {
+        // Add exploration messages for this step if they exist
+        const explorationMessages = messageTree.get(step.id) || [];
+        if (explorationMessages.length > 0) {
           markdown += `    - Further Exploration\n`;
           let currentUserQuestion = "";
           let currentAiResponse = null;
 
-          exploration.forEach((expMsg) => {
+          explorationMessages.forEach((expMsg) => {
             const expParsed = parseMessage(expMsg);
             if (expMsg.sender === "user") {
               currentUserQuestion = expParsed.content;
@@ -209,11 +205,11 @@ function generateMarkdown(
                 markdown += `      - Question: ${currentUserQuestion}\n`;
                 markdown += `        - Answer: ${currentAiResponse.content}\n`;
                 if (currentAiResponse.steps) {
-                  markdown += `        - Analysis\n`;
+                  markdown += `          - Detailed Analysis\n`;
                   currentAiResponse.steps.forEach((expStep) => {
-                    markdown += `          - ${expStep.goal}\n`;
-                    markdown += `            - ${expStep.reasoning}\n`;
-                    markdown += `            - Concluded: ${expStep.conclusion}\n`;
+                    markdown += `            - Sub-Goal: ${expStep.goal}\n`;
+                    markdown += `              - Sub-Reasoning: ${expStep.reasoning}\n`;
+                    markdown += `              - Sub-Conclusion: ${expStep.conclusion}\n`;
                   });
                 }
                 currentUserQuestion = "";

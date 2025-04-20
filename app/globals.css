@@ -4,10 +4,10 @@
 
 :root {
   /* color palette */
-  --primary: #2a394c;
-  --secondary: #a1b2c2;
-  --background: #d1d8de;
-  --foreground: #f0f0f0;
+  --primary:    #15538e; 
+  --secondary:  #0c1d3b; 
+  --background: #f7fbfc;  
+  --foreground: #f2dfd0;
 }
 
 @layer base {
