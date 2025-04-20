@@ -1,4 +1,6 @@
-# Tree of Thought Integration
+# Grit - A Human/AI Collaboration framework.
+
+
 
 This project integrates the Tree of Thought LLM framework with a Next.js frontend for interactive reasoning visualization.
 
