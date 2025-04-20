@@ -1,4 +1,5 @@
 # [Grit - A Human/AI Collaboration framework]()
+<!-- link to devpost -->
 > ### Submission for Hack Davis 2025
 
 ![Thumbnail]()
@@ -60,8 +61,8 @@ npm run dev
 - Tree-based exploration of multiple reasoning paths
 - Confidence scoring for each reasoning branch
 
-### System Architecture
-![SystemArch]()
+<!-- ### System Architecture
+![SystemArch]() -->
 
 <!-- - Frontend: Next.js with TypeScript and Tailwind CSS
 - Backend: FastAPI service wrapping the Tree of Thought LLM implementation
