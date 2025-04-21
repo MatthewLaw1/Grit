@@ -17,16 +17,22 @@ interface ReasoningStep {
 
 interface ChatPanelProps {
   messages: Message[]
-  onSendMessage: (text: string, parentStepId?: string) => void
+  onSendMessage: (text: string, stepId?: string) => void
   isLoading?: boolean
-  selectedStep?: ReasoningStep
-  onExploreStep: (stepId: string) => void
-  focusedStepId?: string
-  onReturnToMain: () => void
   chatId: number
   title: string
   subheading: string
   onClose: () => void
+  onExploreStep: (stepId: string) => void
+  onReturnToMain: () => void
+  focusedStepId?: string
+}
+
+interface ExplorationStep {
+  goal: string;
+  reasoning: string;
+  conclusion: string;
+  id: string;
 }
 
 interface ParsedMessage {
@@ -37,7 +43,6 @@ interface ParsedMessage {
     conclusion: string
     id: string
   }[]
-  parentStepId?: string
 }
 
 const parseMessage = (msg: Message): ParsedMessage => {
@@ -45,14 +50,12 @@ const parseMessage = (msg: Message): ParsedMessage => {
     const parsed = JSON.parse(msg.content)
     if (msg.sender === "user") {
       return {
-        content: parsed.text || msg.content,
-        parentStepId: parsed.parentStepId,
+        content: parsed.text || msg.content
       }
     } else {
       return {
         content: parsed.finalAnswer || msg.content,
-        steps: parsed.steps,
-        parentStepId: parsed.parentStepId,
+        steps: parsed.steps
       }
     }
   } catch {
@@ -64,13 +67,12 @@ export default function ChatPanel({
   messages,
   onSendMessage,
   isLoading = false,
-  selectedStep,
-  onExploreStep,
-  focusedStepId,
-  onReturnToMain,
   title,
   subheading,
   onClose,
+  onExploreStep,
+  onReturnToMain,
+  focusedStepId
 }: ChatPanelProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -89,23 +91,7 @@ export default function ChatPanel({
     textareaRef.current.value = ""
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
-  }
-
-  const renderExplorationContext = (parentStepId: string | undefined) => {
-    if (!parentStepId) return null
-
-    const parentStep = messages
-      .map(parseMessage)
-      .find((m) => m.steps?.some((s) => s.id === parentStepId))
-      ?.steps?.find((s) => s.id === parentStepId)
-
-    if (!parentStep) return null
-
+  const renderExplorationContext = (step: ExplorationStep) => {
     return (
       <div className="mb-2 text-sm text-muted-foreground border-l-2 border-muted pl-2">
         <div className="flex justify-between items-center">
@@ -120,16 +106,23 @@ export default function ChatPanel({
           </Button>
         </div>
         <p>
-          <strong>Goal:</strong> {parentStep.goal}
+          <strong>Goal:</strong> {step.goal}
         </p>
         <p>
-          <strong>Reasoning:</strong> {parentStep.reasoning}
+          <strong>Reasoning:</strong> {step.reasoning}
         </p>
         <p>
-          <strong>Conclusion:</strong> {parentStep.conclusion}
+          <strong>Conclusion:</strong> {step.conclusion}
         </p>
       </div>
     )
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e)
+    }
   }
 
   return (
@@ -148,22 +141,12 @@ export default function ChatPanel({
         <div className="space-y-4">
           {messages.map((message, index) => {
             const parsedMessage = parseMessage(message)
-            const isExplorationMessage =
-              parsedMessage.parentStepId === focusedStepId
-
-            // Only show messages that are either part of the main conversation (no parentStepId)
-            // or are part of the current exploration
-            if (
-              focusedStepId &&
-              !isExplorationMessage &&
-              parsedMessage.parentStepId
-            ) {
-              return null
-            }
-
+            // Find the step being explored if any
+            const exploredStep = focusedStepId && parsedMessage.steps?.find(s => s.id === focusedStepId);
+            
             return (
               <div key={message.id || index}>
-                {renderExplorationContext(parsedMessage.parentStepId)}
+                {exploredStep && renderExplorationContext(exploredStep)}
                 <div
                   className={cn(
                     "flex w-max max-w-[80%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
@@ -174,8 +157,7 @@ export default function ChatPanel({
                 >
                   {parsedMessage.content}
                   {message.sender === "bot" &&
-                    parsedMessage.steps &&
-                    !focusedStepId && (
+                    parsedMessage.steps && (
                       <div className="mt-3 border-t border-gray-200 pt-3">
                         <div className="text-sm font-medium mb-2">
                           Reasoning Steps:
@@ -192,7 +174,7 @@ export default function ChatPanel({
                                 onClick={() => onExploreStep(step.id)}
                                 className="text-xs"
                               >
-                                Explore this reasoning
+                                Explore this step
                               </Button>
                             </div>
                             <div className="text-gray-600">
@@ -221,11 +203,7 @@ export default function ChatPanel({
       <form onSubmit={handleSubmit} className="p-4 flex gap-2">
         <Textarea
           ref={textareaRef}
-          placeholder={
-            focusedStepId
-              ? "Ask about this reasoning step..."
-              : "Type your message..."
-          }
+          placeholder={focusedStepId ? "Ask about this step..." : "Type your message..."}
           className="min-h-[60px]"
           onKeyDown={handleKeyDown}
         />
