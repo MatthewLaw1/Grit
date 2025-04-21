@@ -22,7 +22,7 @@ interface Message {
     timestamp: string;
 }
 
-interface Step {
+interface ReasoningStep {
     id: string;
     goal: string;
     reasoning: string;
@@ -33,18 +33,28 @@ interface Step {
 // your JSON parser
 const parseMessage = (
     msg: Message
-    ): { content: string; steps?: Step[] } => {
+    ): { content: string; steps?: ReasoningStep[]; stepId?: string; parentStepId?: string } => {
     try {
         const parsed = JSON.parse(msg.content);
         if (msg.sender === "user") {
-        return {
-            content: parsed.text ?? msg.content
-        };
+            return {
+                content: parsed.text ?? msg.content,
+                parentStepId: parsed.stepId
+            };
         } else {
-        return {
-            content: parsed.finalAnswer ?? msg.content,
-            steps: parsed.steps
-        };
+            const response = parsed.response || parsed;
+            if (response.stepId) {
+                return {
+                    content: response.finalAnswer ?? msg.content,
+                    steps: response.steps,
+                    stepId: response.stepId,
+                    parentStepId: response.stepId
+                };
+            }
+            return {
+                content: response.finalAnswer ?? msg.content,
+                steps: response.steps
+            };
         }
     } catch {
         return { content: msg.content };
@@ -114,7 +124,14 @@ export default function Home() {
                     prompt: text,
                     model: model,
                     thoughtMode: "chain",
-                    context: stepId ? { type: "exploring_step", stepId } : undefined
+                    context: stepId ? {
+              type: "exploring_step",
+              stepId,
+              step: messages
+                .map(m => parseMessage(m))
+                .flatMap(m => m.steps || [])
+                .find(s => s.id === stepId)
+            } : undefined
                 }),
             });
             const aiJson = await aiRes.json();
@@ -248,11 +265,16 @@ export default function Home() {
                         subheading={activeChat.subheading}
                         messages={messages}
                         loading={loading}
-                        onSendMessage={(t) => sendMessage(activeChat.id, t)}
+                        onSendMessage={(t, stepId) => sendMessage(activeChat.id, t, stepId)}
                         parseMessage={parseMessage}
                         onExploreStep={(stepId) => setExploringStepId(stepId)}
                         onReturnToMain={() => setExploringStepId(undefined)}
                         onClose={() => setShowChat(false)}
+                        focusedStepId={exploringStepId}
+                        selectedStep={messages
+                          .map(m => parseMessage(m))
+                          .flatMap(m => m.steps || [])
+                          .find(s => s.id === exploringStepId)}
                     />
                 </div>
             )}
@@ -261,7 +283,7 @@ export default function Home() {
                 <FlowchartPanel
                 messages={messages}
                 parseMessage={parseMessage}
-                focusedStepId={exploringStepId}
+                        focusedStepId={exploringStepId}
                 onClose={() => setShowFlowchart(false)}
                 />
             )}

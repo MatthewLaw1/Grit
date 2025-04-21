@@ -17,7 +17,8 @@ interface Step {
 interface ParsedMessage {
   content: string;
   steps?: Step[];
-  parentStepId?: string;
+  stepId?: string; 
+  parentStepId?: string; 
 }
 
 interface FlowchartPanelProps {
@@ -25,6 +26,7 @@ interface FlowchartPanelProps {
   messages: Message[];
   parseMessage: (msg: Message) => ParsedMessage;
   focusedStepId?: string;
+  loading?: boolean;
 }
 
 // Configure Markmap transformer with HTML support
@@ -216,7 +218,7 @@ function generateMarkdown(
 
       const explorationMessages = messages.filter((msg) => {
         const parsed = parseMessage(msg);
-        return parsed.parentStepId === focusedStepId;
+        return parsed.parentStepId === focusedStepId || parsed.stepId === focusedStepId;
       });
 
       if (explorationMessages.length > 0) {
@@ -268,7 +270,7 @@ function generateMarkdown(
   const messageTree = new Map<string | undefined, Message[]>();
   messages.forEach((msg) => {
     const parsed = parseMessage(msg);
-    const parentId = parsed.parentStepId;
+    const parentId = parsed.stepId || parsed.parentStepId;
     if (!messageTree.has(parentId)) {
       messageTree.set(parentId, []);
     }

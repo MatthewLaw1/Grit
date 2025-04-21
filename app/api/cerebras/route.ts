@@ -65,7 +65,7 @@ const client = new Cerebras({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, model, thoughtMode = 'chain' } = body;
+    const { prompt, model, thoughtMode = 'chain', context } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -143,7 +143,27 @@ Format your response as a JSON object with this structure:
       messages: [
         {
           role: 'system',
-          content: "You MUST output ONLY a JSON object with this exact structure:\n" + systemMessage
+          content: context?.type === "exploring_step" 
+            ? `You are analyzing this specific reasoning step:
+Goal: ${context.step?.goal}
+Reasoning: ${context.step?.reasoning}
+Conclusion: ${context.step?.conclusion}
+
+Provide a detailed analysis and response about this step. Your response must be a JSON object with this structure:
+{
+  "steps": [
+    {
+      "goal": "Your analysis goal",
+      "reasoning": "Your detailed analysis",
+      "conclusion": "Your findings",
+      "id": "unique-step-id"
+    }
+  ],
+  "finalAnswer": "Your complete analysis and recommendations"
+}
+
+Do not include any text outside the JSON structure. The response must start with '{' and end with '}'.`
+            : "You MUST output ONLY a JSON object with this exact structure:\n" + systemMessage
         },
         {
           role: 'user',
@@ -220,9 +240,20 @@ Format your response as a JSON object with this structure:
       throw new Error('Failed to process Cerebras API response');
     }
 
-    return NextResponse.json({
-      response: parsedResponse
-    });
+    // When exploring a step, structure the response as a child of that step
+    if (context?.type === "exploring_step") {
+      const explorationResponse = {
+        steps: parsedResponse.steps.map(step => ({
+          ...step,
+          parentId: context.stepId // Set parent ID to the step being explored
+        })),
+        finalAnswer: parsedResponse.finalAnswer,
+        stepId: context.stepId
+      };
+      return NextResponse.json({ response: explorationResponse });
+    } else {
+      return NextResponse.json({ response: parsedResponse });
+    }
     
   } catch (error) {
     console.error('Cerebras API Error:', error);

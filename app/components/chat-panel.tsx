@@ -26,41 +26,16 @@ interface ChatPanelProps {
   onExploreStep: (stepId: string) => void
   onReturnToMain: () => void
   focusedStepId?: string
+  selectedStep?: ReasoningStep
+  parseMessage: (msg: Message) => ParsedMessage
 }
 
-interface ExplorationStep {
-  goal: string;
-  reasoning: string;
-  conclusion: string;
-  id: string;
-}
 
 interface ParsedMessage {
   content: string
-  steps?: {
-    goal: string
-    reasoning: string
-    conclusion: string
-    id: string
-  }[]
-}
-
-const parseMessage = (msg: Message): ParsedMessage => {
-  try {
-    const parsed = JSON.parse(msg.content)
-    if (msg.sender === "user") {
-      return {
-        content: parsed.text || msg.content
-      }
-    } else {
-      return {
-        content: parsed.finalAnswer || msg.content,
-        steps: parsed.steps
-      }
-    }
-  } catch {
-    return { content: msg.content }
-  }
+  steps?: ReasoningStep[]
+  stepId?: string
+  parentStepId?: string
 }
 
 export default function ChatPanel({
@@ -72,7 +47,9 @@ export default function ChatPanel({
   onClose,
   onExploreStep,
   onReturnToMain,
-  focusedStepId
+  focusedStepId,
+  selectedStep,
+  parseMessage: messageParseFn
 }: ChatPanelProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
@@ -91,7 +68,7 @@ export default function ChatPanel({
     textareaRef.current.value = ""
   }
 
-  const renderExplorationContext = (step: ExplorationStep) => {
+  const renderExplorationContext = (step: ReasoningStep) => {
     return (
       <div className="mb-2 text-sm text-muted-foreground border-l-2 border-muted pl-2">
         <div className="flex justify-between items-center">
@@ -140,23 +117,28 @@ export default function ChatPanel({
       <div className="flex-1 p-4 overflow-auto">
         <div className="space-y-4">
           {messages.map((message, index) => {
-            const parsedMessage = parseMessage(message)
-            const messageStepId = message.sender === "user" ? JSON.parse(message.content).stepId : undefined;
-            
-            // Only show messages that are either:
-            // 1. Part of the main conversation (no stepId) when not exploring a step
-            // 2. Part of the current step's thread when exploring a step
-            if ((focusedStepId && messageStepId !== focusedStepId) || 
-                (!focusedStepId && messageStepId)) {
-              return null;
+            const parsedMessage = messageParseFn(message)
+            if (focusedStepId) {
+
+              if (parsedMessage.parentStepId !== focusedStepId && parsedMessage.stepId !== focusedStepId) {
+                return null;
+              }
+            } else {
+
+              if (parsedMessage.parentStepId || parsedMessage.stepId) {
+                return null;
+              }
             }
 
-            // Find the step being explored if any
-            const exploredStep = focusedStepId && parsedMessage.steps?.find(s => s.id === focusedStepId);
-            
+            // Show exploration context only for the first message in the thread
+            const isFirstMessage = messages.findIndex(m => {
+              const parsed = messageParseFn(m);
+              return parsed.parentStepId === focusedStepId;
+            }) === index;
+
             return (
               <div key={message.id || index}>
-                {exploredStep && !messageStepId && renderExplorationContext(exploredStep)}
+                {selectedStep && isFirstMessage && renderExplorationContext(selectedStep)}
                 <div
                   className={cn(
                     "flex w-max max-w-[80%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
