@@ -141,12 +141,22 @@ export default function ChatPanel({
         <div className="space-y-4">
           {messages.map((message, index) => {
             const parsedMessage = parseMessage(message)
+            const messageStepId = message.sender === "user" ? JSON.parse(message.content).stepId : undefined;
+            
+            // Only show messages that are either:
+            // 1. Part of the main conversation (no stepId) when not exploring a step
+            // 2. Part of the current step's thread when exploring a step
+            if ((focusedStepId && messageStepId !== focusedStepId) || 
+                (!focusedStepId && messageStepId)) {
+              return null;
+            }
+
             // Find the step being explored if any
             const exploredStep = focusedStepId && parsedMessage.steps?.find(s => s.id === focusedStepId);
             
             return (
               <div key={message.id || index}>
-                {exploredStep && renderExplorationContext(exploredStep)}
+                {exploredStep && !messageStepId && renderExplorationContext(exploredStep)}
                 <div
                   className={cn(
                     "flex w-max max-w-[80%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
